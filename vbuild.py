@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import re,os
+import re,os,json
 # #############################################################################
 #    Copyright (C) 2018 manatlan manatlan[at]gmail(dot)com
 #
@@ -9,9 +9,29 @@ import re,os
 # https://github.com/manatlan/vbuild
 # #############################################################################
 
-__version__="0.2"   #py2.7 & py3.5 !!!!
+__version__="0.3"   #py2.7 & py3.5 !!!!
 
-def mkCss(css,prefix=""):
+def minimize(txt):
+    try:                                        #py3
+        import urllib.request as urlrequest
+        import urllib.parse as urlparse
+    except ImportError:                         #py2
+        import urllib2 as urlrequest    
+        import urllib as urlparse
+    data={
+      'js_code':txt,
+      'compilation_level':'SIMPLE_OPTIMIZATIONS',
+      'output_format':'json',
+      'output_info':'compiled_code',
+    }
+    req = urlrequest.Request("https://closure-compiler.appspot.com/compile",urlparse.urlencode(data).encode("utf8"),{'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8'})
+    response=urlrequest.urlopen(req)
+    buf = response.read()    
+    response.close()
+    return json.loads(buf)["compiledCode"]
+
+
+def mkPrefixCss(css,prefix=""):
     lines=[]
     css=re.sub(re.compile("/\*.*?\*/",re.DOTALL ) ,"" ,css)
     css=re.sub(re.compile("[ \t\n]+",re.DOTALL ) ," " ,css)
@@ -49,7 +69,7 @@ class VBuild:
 
         self.html="""<script type="text/x-template" id="%s">%s</script>""" % (tplId,html)
         self.script="""var %s = Vue.component('%s', %s);""" % (name,name,js.replace("{","{template:'#%s'," % tplId,1))
-        self.style=mkCss(css,"%s[%s]" % (tag,dataId)) if css else ""
+        self.style=mkPrefixCss(css,"%s[%s]" % (tag,dataId)) if css else ""
         self.tags=[name]
 
     def __add__(self,o):
@@ -93,10 +113,4 @@ if __name__=="__main__":
     #~ o=VBuild(r"D:\PROG\wreqman\web\req.vue")
     #~ o.toTestFile("aeff.html")
     #~ print(o)
-
-    h="""
-<template>
-<div>Load</div>
-</template>
-"""
-    r=VBuild("name.vue",h)
+    pass    

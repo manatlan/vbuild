@@ -1,0 +1,45 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build dist for pypi",
+            "type": "shell",
+            "command": [
+                    "rm -f dist/*.tar.gz dist/*.whl",
+                    "&& python3 setup.py sdist bdist_wheel",
+                    "&& python2 setup.py sdist bdist_wheel"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "panel": "new",
+                "focus": true
+            }            
+        },
+        {
+            "label": "upload to pypi",
+            "type": "shell",
+            "command": "/home/manatlan/.local/bin/twine upload dist/vbuild-*.tar.gz dist/vbuild-*.whl",
+            "problemMatcher": [],
+            "presentation": {
+                "panel": "new",
+                "focus": true
+            }
+        },
+        {
+            "label": "Tests py2 & py3",
+            "type": "shell",
+            "command": "python2 tests.py && python3 tests.py",
+            "problemMatcher": [],
+            "presentation": {
+                "panel": "new",
+                "focus": true
+            }
+        }        
+    ]
+}

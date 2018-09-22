@@ -1,9 +1,11 @@
 # vbuild
 
-"Compile" your [VUEJS](https://vuejs.org/) [component (*.vue)](https://fr.vuejs.org/v2/guide/single-file-components.html) to standalone html/js/css ... python only (no need of nodejs)
+"Compile" your [VUEJS](https://vuejs.org/) [component (*.vue)](https://fr.vuejs.org/v2/guide/single-file-components.html) to standalone html/js/css ... python only (no need of nodejs). BTW it provides a js-minimizer (es2015 compliant code)
 
 It's just an utility to extract HTML(template), SCRIPT and STYLE from a VUE/SFC component (*.vue).
 It's PURE python (py2 & py3 compatible), no nodejs !
+
+[Available on pypi](https://pypi.org/project/vbuild/)
 
 ```python
 import vbuild
@@ -30,18 +32,25 @@ print( s.script )
 print( s.style )
 ```
 
-and a VBuild is pick'able !
+By the way, the module provide a js-minimizer (to generate ES2015 compliant) (thru on the [clojure online service](https://closure-compiler.appspot.com))
+
+```python
+js="""async function  mymethod(...a) {
+    var f=(...a) => {let b=12}
+}
+"""
+min=vbuild.minimize(js)
+```
 
 **Notes:**
 
- * Minimum component needs the `<template></template>` tags
- * Only one `<style></style>` tags !
+ * `templates` are converted to a `<script type="text/x-template" id="XXX"></script>` (not converted to JS)
+ * A Minimal component needs the `<template></template>` tag only
+ * It works with just one `<style></style>` tag !
  * `Style` are SCOPED only (just style the component, you can't style others things)
  * styles are minimized (remove comments and spaces)
- * JS is not minimized, and not babeled ! (but you can easily send it thru an online service for that)
- * `templates` are converted to a `<script type="text/x-template" id="XXX"></script>` (not converted to JS)
 
-Its main purpose is to let you use components (.vue files) in your vuejs app, without a full nodejs stack. It's up to you to create your generator, to extract the things, and create your "index.html" file. (it's a 5 lines of python code), example:
+Its main purpose is to let you use components (.vue files) in your vuejs app, without a full nodejs stack. It's up to you to create your generator, to extract the things, and create your "index.html" file. It's a 5 lines of python code; example:
 
 ```python
 import vbuild,glob

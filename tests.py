@@ -3,11 +3,11 @@ import unittest
 
 class TesCss(unittest.TestCase):
     def test_css1(self):
-        self.assertEqual(vbuild.mkCss("","XXX"),"")
+        self.assertEqual(vbuild.mkPrefixCss("","XXX"),"")
 
     def test_css2(self):
-        self.assertEqual(vbuild.mkCss("   a    {color}  "),      "a {color}")
-        self.assertEqual(vbuild.mkCss("   a    {color}  ","XXX"),"XXX a {color}")
+        self.assertEqual(vbuild.mkPrefixCss("   a    {color}  "),      "a {color}")
+        self.assertEqual(vbuild.mkPrefixCss("   a    {color}  ","XXX"),"XXX a {color}")
 
     def test_cssTop(self):
         t="""
@@ -28,7 +28,7 @@ XXX button[ name ] { background:red }
 XXX hr *, XXX body:hover { color:red;}
 XXX p > a, XXX p>i { }
 """
-        tt=vbuild.mkCss(t,"XXX")
+        tt=vbuild.mkPrefixCss(t,"XXX")
         self.assertEqual(tt,ok.strip())
 
 
@@ -82,6 +82,14 @@ export default {
         self.assertTrue('<script type="text/x-template" id="tpl-name">' in str(r))
         self.assertTrue("var name = Vue.component('name', {template:'#tpl-name'," in str(r))
 
+
+    def test_composant_add(self):
+        c=vbuild.VBuild("c.vue","""<template><div>XXX</div></template>""")
+        cc=sum([c,c])
+        self.assertTrue(cc.html.count("<div data-c>XXX</div>")==2)
+        self.assertTrue(cc.script.count("var c = Vue.component('c', {template:'#tpl-c',});")==2)
+        self.assertTrue(cc.style=="")
+
     def test_pickable(self):    # so it's GAE memcach'able !
         h="""
 <template>
@@ -93,6 +101,17 @@ export default {
         f_string = pickle.dumps(r)
         f_new = pickle.loads(f_string)
         self.assertEqual(str(r),str(f_new))
+
+class TestMinimize(unittest.TestCase):
+
+    def test_min(self):
+        s="""
+        async function  jo(...a) {
+            var f=(...a) => {let b=12}
+        }
+        """
+        x=vbuild.minimize(s)
+        self.assertTrue( "$jscomp" in x)
 
 if __name__ == '__main__':
     unittest.main()
