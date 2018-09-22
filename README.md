@@ -62,3 +62,11 @@ writeYourTemplate("index.html",buf)
 
 Hope it could help ...
 
+
+TODO:
+
+ * more robust when things go wrong
+ * universal package whl for py2 and py3
+ * more utilities
+ * and docs !
+
