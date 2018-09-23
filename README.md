@@ -47,7 +47,7 @@ min=vbuild.minimize(js)
  * `templates` are converted to a `<script type="text/x-template" id="XXX"></script>` (not converted to JS)
  * A Minimal component needs the `<template></template>` tag only
  * It works with just one `<style></style>` tag !
- * `Style` are SCOPED only (just style the component, you can't style others things)
+ * `Style` are SCOPED only (but the next release will respect the [specs](https://vue-loader.vuejs.org/spec.html), many `style` tags, and scoped or global!)
  * styles are minimized (remove comments and spaces)
 
 Its main purpose is to let you use components (.vue files) in your vuejs app, without a full nodejs stack. It's up to you to create your generator, to extract the things, and create your "index.html" file. It's a 5 lines of python code; example:
