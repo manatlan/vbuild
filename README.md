@@ -5,7 +5,7 @@
 It's just an utility to extract HTML(template), SCRIPT and STYLE from a VUE/SFC component (*.vue).
 It's PURE python (py2 & py3 compatible), no nodejs ! It's fully unitested (100% !)
 
-It won't replace webpack/notejs/vue-cli, it fills the _"Sometimes you have to work with the tools you have, not the ones you want."_ gap.
+It won't replace webpack/nodejs/vue-cli, it fills the _"Sometimes you have to work with the tools you have, not the ones you want."_ gap.
 
 [Available on pypi](https://pypi.org/project/vbuild/)
 
