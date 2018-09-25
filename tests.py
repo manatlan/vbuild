@@ -256,6 +256,20 @@ export default {
         f_new = pickle.loads(f_string)
         self.assertEqual(str(r),str(f_new))
 
+    def test_script_good(self):    # so it's GAE memcach'able !
+        h="""
+<template>
+  <div>Load</div>
+</template>
+<script>
+export default {
+    mounted() {}
+}
+</script>
+"""
+        r=vbuild.VBuild("name.vue",h)
+        self.assertEqual(r.script,"""var name = Vue.component('name', {template:'#tpl-name',\n    mounted() {}\n});""")
+
 class TestMinimize(unittest.TestCase):
     def test_bad(self):
         s="""
