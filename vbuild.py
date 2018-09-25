@@ -8,7 +8,7 @@ import re,os,json
 #
 # https://github.com/manatlan/vbuild
 # #############################################################################
-__version__="0.4"   #py2.7 & py3.5 !!!!
+__version__="0.4.1"   #py2.7 & py3.5 !!!!
 
 
 try:
@@ -113,7 +113,7 @@ class VBuild:
                 p1=vp.script.find("{")
                 p2=vp.script.rfind("}")
                 if 0 <= p1 <= p2:
-                    js= vp.script[p1:p2]
+                    js= vp.script[p1:p2+1]
                 else:
                     raise VBuildException("Component %s contains a bad script" % filename)                    
             else:
