@@ -8,7 +8,7 @@ import re,os,json
 #
 # https://github.com/manatlan/vbuild
 # #############################################################################
-__version__="0.4.2"   #py2.7 & py3.5 !!!!
+__version__="0.4.3"   #py2.7 & py3.5 !!!!
 
 
 try:

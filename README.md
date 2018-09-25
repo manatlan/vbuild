@@ -67,7 +67,6 @@ Hope it could help ...
 
 TODO:
 
- * universal package whl for py2 and py3
  * more utilities
  * and docs !
 
