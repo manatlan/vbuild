@@ -295,10 +295,12 @@ class RealTests(unittest.TestCase):
             for i in glob.glob("vues/*.vue"):
                 r=vbuild.VBuild(i)
                 self.assertTrue(str(r))
+        else:
+            print("***WARNING*** : Don't test real vue files (you haven't a vues folder with .vue files)")
 
     def test_bad_file(self):
         with self.assertRaises(vbuild.VBuildException):
-            vbuild.VBuild("unknown_file.vue") # You can't have multiple 'c'
+            vbuild.VBuild("unknown_file.vue") # No such file or directory
 
 
 if __name__ == '__main__':
