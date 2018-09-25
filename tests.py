@@ -115,13 +115,11 @@ class TestVuePArser(unittest.TestCase):
 
     def test_bad_script_bad(self):
         h="""<template> <div>XXX</div></template><script> gdsf gfds """
-        # with self.assertRaises(vbuild.VBuildException):
         r=vbuild.VueParser(h)
         self.assertEqual(r.script,None)
 
     def test_bad_style_bad(self):
         h="""<template> <div>XXX</div></template><style> gdsf gfds """
-        # with self.assertRaises(vbuild.VBuildException):
         r=vbuild.VueParser(h)
         self.assertEqual(r.script,None)
         self.assertEqual(r.styles,[])
@@ -178,7 +176,6 @@ class TestVBuild(unittest.TestCase):
 
     def test_bad_script_not_closed(self):
         h="""<template> <div>XXX</div></template><script> gdsf gfds """
-        # with self.assertRaises(vbuild.VBuildException):
         r=vbuild.VBuild("comp.vue",h)   # Component %s contains a bad script
         self.assertTrue(r.script)
 
