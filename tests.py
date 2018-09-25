@@ -298,7 +298,7 @@ class RealTests(unittest.TestCase):
 
     def test_bad_file(self):
         with self.assertRaises(vbuild.VBuildException):
-            vbuild.VBuild("unknown_file.vue") # You can't have multiple set(['c'])
+            vbuild.VBuild("unknown_file.vue") # You can't have multiple 'c'
 
 
 if __name__ == '__main__':
