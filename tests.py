@@ -214,7 +214,7 @@ export default {
 """
         r=vbuild.VBuild("name.vue",h)
         self.assertEqual(r.tags,["name"])
-        self.assertEqual(r.style.count("div[data-name]"),2)
+        self.assertEqual(r.style.count("*[data-name]"),2)
         self.assertEqual(r.style.count("background"),3)
         self.assertFalse(":scope" in str(r))
         self.assertTrue("<div data-name>" in str(r))

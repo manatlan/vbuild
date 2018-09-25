@@ -8,7 +8,7 @@ import re,os,json
 #
 # https://github.com/manatlan/vbuild
 # #############################################################################
-__version__="0.4.1"   #py2.7 & py3.5 !!!!
+__version__="0.4.2"   #py2.7 & py3.5 !!!!
 
 
 try:
@@ -122,7 +122,8 @@ class VBuild:
             self.html="""<script type="text/x-template" id="%s">%s</script>""" % (tplId,html)
             self.script="""var %s = Vue.component('%s', %s);""" % (name,name,js.replace("{","{template:'#%s'," % tplId,1))
             self.style=""
-            if vp.scopedStyles: self.style=mkPrefixCss("\n".join(vp.scopedStyles),"%s[%s]" % (vp.rootTag,dataId))
+            # if vp.scopedStyles: self.style=mkPrefixCss("\n".join(vp.scopedStyles),"%s[%s]" % (vp.rootTag,dataId))
+            if vp.scopedStyles: self.style=mkPrefixCss("\n".join(vp.scopedStyles),"*[%s]" % dataId)
             if vp.styles: self.style+="\n"+mkPrefixCss("\n".join(vp.styles))
             self.tags=[name]
 
