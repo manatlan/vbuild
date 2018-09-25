@@ -56,7 +56,7 @@ Its main purpose is to let you use components (.vue files) in your vuejs app, wi
 
 ```python
 import vbuild,glob
-r=sum([vbuild.VBuild(i) for i in glob.glob("*.vue")+glob.glob("*/*.vue")))
+r=sum([vbuild.VBuild(i) for i in glob.glob("*.vue")+glob.glob("*/*.vue")])
 buf=readYourTemplate("index.tpl") # should contains a tag "<!-- HERE -->" that would be substituted
 buf=buf.replace("<!-- HERE -->",str(r))
 writeYourTemplate("index.html",buf)
