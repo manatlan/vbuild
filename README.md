@@ -62,6 +62,8 @@ buf=buf.replace("<!-- HERE -->",str(r))
 writeYourTemplate("index.html",buf)
 ```
 
+([a real example](https://github.com/manatlan/wuy/tree/master/examples/vueapp) of rendering vue/sfc components, using **vbuild** and the marvelous [wuy](https://github.com/manatlan/wuy))
+
 Hope it could help ...
 
 
