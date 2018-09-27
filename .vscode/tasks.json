@@ -8,8 +8,7 @@
             "type": "shell",
             "command": [
                     "rm -f dist/*.tar.gz dist/*.whl",
-                    "&& python3 setup.py sdist bdist_wheel",
-                    "&& python2 setup.py sdist bdist_wheel"
+                    "&& python3 setup.py sdist bdist_wheel --universal"
             ],
             "group": {
                 "kind": "build",
