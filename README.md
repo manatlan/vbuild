@@ -34,9 +34,11 @@ print( s.script )
 print( s.style )
 ```
 
-You can use [sass](https://sass-lang.com/) (using `<style lang="scss"></style>` or `<style lang="sass"></style>`) or [less](http://lesscss.org/) (using `<style lang="less"></style>`) in your styles. But you'll need to install [pyscss](https://pypi.org/project/pyScss/) or [lesscpy](https://pypi.org/project/lesscpy/)
+By default, VBuild won't minify things. But you can change that by using `vbuild.VBuild("mycompo.vue", minify=True)`, but you'll need to install [css-html-js-minify](https://pypi.org/project/css-html-js-minify/).
 
-By the way, the module provide a js-minimizer (to generate ES2015 compliant) (thru on the [clojure online service](https://closure-compiler.appspot.com))
+You can use [sass](https://sass-lang.com/) (using `<style lang="scss"></style>` or `<style lang="sass"></style>`) or [less](http://lesscss.org/) (using `<style lang="less"></style>`) in your styles. But you'll need to install [pyscss](https://pypi.org/project/pyScss/) or [lesscpy](https://pypi.org/project/lesscpy/), depending on your needs.
+
+By the way, the module provide a js-minimizer(transpiler) (to generate ES5 compliant js) (thru on the [clojure online service](https://closure-compiler.appspot.com))
 
 ```python
 js="""async function  mymethod(...a) {
@@ -58,7 +60,7 @@ Its main purpose is to let you use components (.vue files) in your vuejs app, wi
 
 ```python
 import vbuild,glob
-r=sum([vbuild.VBuild(i) for i in glob.glob("*.vue")+glob.glob("*/*.vue")])
+r=sum([vbuild.VBuild(i,minify=True) for i in glob.glob("*.vue")+glob.glob("*/*.vue")])
 buf=readYourTemplate("index.tpl") # should contains a tag "<!-- HERE -->" that would be substituted
 buf=buf.replace("<!-- HERE -->",str(r))
 writeYourTemplate("index.html",buf)

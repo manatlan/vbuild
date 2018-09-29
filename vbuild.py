@@ -15,12 +15,17 @@ try:
     from HTMLParser import HTMLParser
     import urllib2 as urlrequest    
     import urllib as urlparse
-    # html_minify = js_minify = css_minify = lambda x:x
 except ImportError:
     from html.parser import HTMLParser
     import urllib.request as urlrequest
     import urllib.parse as urlparse
-    # from css_html_js_minify import html_minify, js_minify, css_minify
+
+try:
+    from css_html_js_minify import html_minify, js_minify, css_minify
+    MINIFY=True
+except ImportError:
+    html_minify = js_minify = css_minify = lambda x:x
+    MINIFY=False
 
 def minimize(txt):
     data={
@@ -116,7 +121,7 @@ def mkPrefixCss(css,prefix=""):
 class VBuildException(Exception): pass
 
 class VBuild:
-    def __init__(self,filename,content=None):  # old vueToTplScript (only one style default scoped !)
+    def __init__(self,filename,content=None,minify=False):  # old vueToTplScript (only one style default scoped !)
         if content is None:
             try:
                 with open(filename,"r+") as fid:
@@ -153,6 +158,13 @@ class VBuild:
             if vp.scopedStyles: self.style=mkPrefixCss("\n".join(vp.scopedStyles),"*[%s]" % dataId)
             if vp.styles: self.style+="\n"+mkPrefixCss("\n".join(vp.styles))
             self.tags=[name]
+
+            if minify:
+                if not MINIFY:
+                    print("***WARNING*** : minify not available : sudo pip install css-html-js-minify")
+                self.html=html_minify(self.html)
+                self.script=js_minify(self.script)
+                self.style=css_minify(self.style)
 
     def __add__(self,o):
         join=lambda *l: ("\n".join(l)).strip("\n")

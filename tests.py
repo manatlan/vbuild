@@ -220,6 +220,48 @@ export default {
         self.assertTrue('<script type="text/x-template" id="tpl-name">' in str(r))
         self.assertTrue("var name = Vue.component('name', {template:'#tpl-name'," in str(r))
 
+    def test_composant_complet_minify(self):
+        h="""
+<template>
+  <div>
+    {{c}} <button @click="inc">++</button>
+  </div>
+</template>
+<script>
+export default {
+  data () {
+    return {
+      c: 0,
+    }
+  },
+  methods: {
+    inc() {this.c+=1;}
+  }
+}
+</script>
+<style scoped>
+:scope {
+    padding:4px;
+    background: yellow
+}
+  button {background:red}
+</style>
+<style>
+  button {background:black}
+</style>
+"""
+        if pkgutil.find_loader("css_html_js_minify"):
+            r=vbuild.VBuild("name.vue",h,minify=True)
+            self.assertEqual(r.tags,["name"])
+            self.assertEqual(r.style.count("*[data-name]"),2)
+            self.assertEqual(r.style.count("background"),3)
+            self.assertFalse(":scope" in str(r))
+            self.assertTrue("<div data-name>" in str(r))
+            self.assertTrue('<script type="text/x-template" id=tpl-name >' in str(r))
+            self.assertTrue("var name=Vue.component('name',{template:'#tpl-name',data(){return{c:0,}},methods:{inc(){this.c+=1;}}})" in str(r))
+        else:
+            print("can't test minify (miss package css-html-js-minify)")
+
     def test_composant_min(self):
         h="""
 <template>
