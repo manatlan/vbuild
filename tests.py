@@ -1,6 +1,8 @@
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 import vbuild,sys,os
 import unittest
+import pkgutil 
 
 class TestVuePArser(unittest.TestCase):
 
@@ -270,23 +272,51 @@ export default {
         r=vbuild.VBuild("name.vue",h)
         self.assertEqual(r.script,"""var name = Vue.component('name', {template:'#tpl-name',\n    mounted() {}\n});""")
 
-class TestMinimize(unittest.TestCase):
-    def test_bad(self):
-        s="""
-        kk{{_=*jùhgj;://\\}$bc(.[hhh]
-        """
-        x=vbuild.minimize(s)
-        self.assertEqual( x,"")
+    def test_sass(self):    # so it's GAE memcach'able !
+        if pkgutil.find_loader("scss"):
+            h="""<template><div>XXX</div></template>
+            <Style scoped lang="sass">
+            body {
+                font: 2px *3;
+                color: red + green;
+            }
+            </style>"""
+            r=vbuild.VBuild("comp.vue",h)
+            self.assertTrue("6px" in r.style)
+            self.assertTrue("#ff8000" in r.style)
+        else:
+            print("can't test sass")
+
+    def test_less(self):    # so it's GAE memcach'able !
+        if pkgutil.find_loader("lesscpy"):
+            h="""<template><div>XXX</div></template>
+            <Style scoped Lang = "leSS" >
+            body {
+                border-width: 2px *3;
+            }
+            </style>"""
+            r=vbuild.VBuild("comp.vue",h)
+            self.assertTrue("6px" in r.style)
+        else:
+            print("can't test less")
+
+# class TestMinimize(unittest.TestCase):
+#     def test_bad(self):
+#         s="""
+#         kk{{_=*jùhgj;://\\}$bc(.[hhh]
+#         """
+#         x=vbuild.minimize(s)
+#         self.assertEqual( x,"")
 
 
-    def test_min(self):
-        s="""
-        async function  jo(...a) {
-            var f=(...a) => {let b=12}
-        }
-        """
-        x=vbuild.minimize(s)
-        self.assertTrue( "$jscomp" in x)
+#     def test_min(self):
+#         s="""
+#         async function  jo(...a) {
+#             var f=(...a) => {let b=12}
+#         }
+#         """
+#         x=vbuild.minimize(s)
+#         self.assertTrue( "$jscomp" in x)
 
 class RealTests(unittest.TestCase):
     def testfiles(self):

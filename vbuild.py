@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 import re,os,json
 # #############################################################################
@@ -8,17 +8,19 @@ import re,os,json
 #
 # https://github.com/manatlan/vbuild
 # #############################################################################
-__version__="0.4.3"   #py2.7 & py3.5 !!!!
+__version__="0.4.4"   #py2.7 & py3.5 !!!!
 
 
 try:
     from HTMLParser import HTMLParser
     import urllib2 as urlrequest    
     import urllib as urlparse
+    # html_minify = js_minify = css_minify = lambda x:x
 except ImportError:
     from html.parser import HTMLParser
     import urllib.request as urlrequest
     import urllib.parse as urlparse
+    # from css_html_js_minify import html_minify, js_minify, css_minify
 
 def minimize(txt):
     data={
@@ -34,12 +36,30 @@ def minimize(txt):
     return json.loads(buf)["compiledCode"]
 
 
+def styleLess(css):  #lang ="less"  // lesscpy
+    try:
+        import lesscpy
+        from six import StringIO  
+        return lesscpy.compile( StringIO(css) , minify=True)
+    except ImportError:
+        print("***WARNING*** : miss 'less' preprocessor : sudo pip install lesscpy")
+        return css
+
+def styleSass(css):  #lang ="scss"/"sass"  //pyscss
+    try:
+        from scss.compiler import compile_string   #lang="scss" 
+        return compile_string(css) 
+    except ImportError:
+        print("***WARNING*** : miss 'sass' preprocessor : sudo pip install pyscss")
+        return css
+
 class VueParser(HTMLParser):
     def __init__(self,buf,name=""):
         HTMLParser.__init__(self)
         self.name=name
         self._p1=None
         self._level=0
+        self._styleLang=None
         self.rootTag=None
         self.html,self.script,self.styles,self.scopedStyles=None,None,[],[]
         self.feed(buf.strip("\n\r\t "))
@@ -47,7 +67,9 @@ class VueParser(HTMLParser):
     def handle_starttag(self, tag, attrs):
         self._tag=tag
         self._level+=1
-        
+        attributes=dict([(k.lower(),v and v.lower()) for k,v in attrs])
+        if tag=="style" and attributes.get("lang",None):
+            self._styleLang= attributes["lang"]
         if self._level==1 and tag=="template":
             if self._p1 is not None: raise VBuildException( "Component %s contains more than one template" % self.name)
             self._p1=self.getOffset()+len(self.get_starttag_text())
@@ -63,9 +85,14 @@ class VueParser(HTMLParser):
     def handle_data(self, data):
         if self._level==1:
             if self._tag=="script": self.script=data.strip("\n\r\t ")
-            if self._tag=="style":  
+            if self._tag=="style": 
+                if self._styleLang in ["scss","sass"]:
+                    data=styleSass(data)
+                elif self._styleLang in ["less"]:
+                    data=styleLess(data)
+
                 if "scoped" in self.get_starttag_text().lower():
-                    self.scopedStyles.append(data)
+                    self.scopedStyles.append(data.strip("\n\r\t "))
                 else:
                     self.styles.append(data.strip("\n\r\t "))
                     
@@ -157,4 +184,3 @@ class VBuild:
 
 if __name__=="__main__":
     exec(open("./tests.py").read())
-    

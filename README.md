@@ -34,6 +34,8 @@ print( s.script )
 print( s.style )
 ```
 
+You can use [sass](https://sass-lang.com/) (using `<style lang="scss"></style>` or `<style lang="sass"></style>`) or [less](http://lesscss.org/) (using `<style lang="less"></style>`) in your styles. But you'll need to install [pyscss](https://pypi.org/project/pyScss/) or [lesscpy](https://pypi.org/project/lesscpy/)
+
 By the way, the module provide a js-minimizer (to generate ES2015 compliant) (thru on the [clojure online service](https://closure-compiler.appspot.com))
 
 ```python
