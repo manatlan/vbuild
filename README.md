@@ -36,7 +36,7 @@ print( s.style )
 
 By default, VBuild won't minify things. But you can change that by using `vbuild.VBuild("mycompo.vue", minify=True)`, but you'll need to install [css-html-js-minify](https://pypi.org/project/css-html-js-minify/).
 
-You can use [sass](https://sass-lang.com/) (using `<style lang="scss"></style>` or `<style lang="sass"></style>`) or [less](http://lesscss.org/) (using `<style lang="less"></style>`) in your styles. But you'll need to install [pyscss](https://pypi.org/project/pyScss/) or [lesscpy](https://pypi.org/project/lesscpy/), depending on your needs.
+You can use [sass](https://sass-lang.com/)(new syntax only) (using `<style lang="scss"></style>` or `<style lang="sass"></style>`) or [less](http://lesscss.org/) (using `<style lang="less"></style>`) in your styles. But you'll need to install [pyscss](https://pypi.org/project/pyScss/) or [lesscpy](https://pypi.org/project/lesscpy/), depending on your needs.
 
 By the way, the module provide a js-minimizer(transpiler) (to generate ES5 compliant js) (thru on the [clojure online service](https://closure-compiler.appspot.com))
 
