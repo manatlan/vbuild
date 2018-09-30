@@ -2,6 +2,8 @@
 
 "Compile" your [VUEJS](https://vuejs.org/) [component (*.vue)](https://fr.vuejs.org/v2/guide/single-file-components.html) to standalone html/js/css ... python only (no need of nodejs). BTW it provides a js-minimizer (es2015 compliant code)
 
+**BREAKING NEWS** : a future version will be able to make your component (script) in **PURE PYTHON** ! (my tests are really great ! stay tuned !!)
+
 It's just an utility to extract HTML(template), SCRIPT and STYLE from a VUE/SFC component (*.vue).
 It's PURE python (py2 & py3 compatible), no nodejs ! It's fully unitested (100% !)
 
