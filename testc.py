@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 import vbuild
 
 c1="""
@@ -38,7 +38,7 @@ class Component:
         print("CREATED")
 
     def WATCH_1(self,newVal,oldVal,name="cpt"):
-        print("WATCH",name,oldVal,newVal)
+        print("WATCH",name,oldVal,"-->",newVal)
         self.wcpt=self.cpt*"+"
 </script>
 <style scoped lang="sass">
@@ -58,6 +58,6 @@ with open("aeff.html","w+") as fid:
 </div>
 </script>
 <script>new Vue({el:"#app"})</script>    
-""" % vbuild.VBuild("comp.vue",c1)
+""" % vbuild.render("comp.vue",c1)
     )
 

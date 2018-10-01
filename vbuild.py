@@ -231,12 +231,11 @@ def mkPythonVueComponent(name,template,code):
             if oname.startswith("COMPUTED_"):
                 computeds.append('"%s": %s.prototype.%s,'%(oname[9:],classname,oname))
             elif oname.startswith("WATCH_"):
-                #TODO: py2.7  : args=dict(zip(list(obj.func_code.co_varnames)[1:], list(obj.func_defaults)))
                 if obj.__defaults__:
-                    varwatch=obj.__defaults__[0]
+                    varwatch=obj.__defaults__[0] #not neat (take the first default as whatch var)
                     watchs.append('"%s": %s.prototype.%s,'%(varwatch,classname,oname))
                 else:
-                    raise VBuildException("Name is not specified")
+                    raise VBuildException("name='var_to_watch' is not specified")
             elif oname in ["MOUNTED","CREATED"]:
                 lifecycles.append('"%s": %s.prototype.%s,'%(oname.lower(),classname,oname))
             else:
