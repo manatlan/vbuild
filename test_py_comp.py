@@ -14,8 +14,9 @@ c1="""
 class Component:
     props=["name"]
 
-    cpt=0
-    wcpt=""
+    def __init__(self):
+        self.cpt=0
+        self.wcpt=""
 
     def inc(self):
         def getv(): return 1

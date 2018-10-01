@@ -224,7 +224,6 @@ def mkPythonVueComponent(name,template,code):
     watchs=[]
     methods=[]
     lifecycles=[]
-    datas={}
     classname=klass.__name__
     for oname,obj in vars(klass).items():
         if callable(obj) and not oname.startswith("_") :
@@ -240,15 +239,11 @@ def mkPythonVueComponent(name,template,code):
                 lifecycles.append('"%s": %s.prototype.%s,'%(oname.lower(),classname,oname))
             else:
                 methods.append('"%s": %s.prototype.%s,'%(oname,classname,oname))
-        else:
-            if not oname.startswith("_"):
-                if oname!="props": datas[oname]=obj
 
     methods="\n".join(methods)
     computeds="\n".join(computeds)
     watchs="\n".join(watchs)
     lifecycles="\n".join(lifecycles)
-    datas=json.dumps(datas)
 
     pyjs=pscript.py2js(code).replace("_s_","$") #https://pscript.readthedocs.io/en/latest/api.html
 
@@ -261,8 +256,8 @@ var %(name)s=(function() {
         "name": %(name)s,
         "props": %(classname)s.prototype.props,
         "template": "%(template)s",
-        "data": ()=>{
-            return %(datas)s
+        "data": function() {
+            return JSON.parse(JSON.stringify( new %(classname)s() ));
         },
         "computed": {
             %(computeds)s
