@@ -8,7 +8,7 @@ import re,os,json,glob,itertools
 #
 # https://github.com/manatlan/vbuild
 # #############################################################################
-__version__="0.5.0"   #py2.7 & py3.5 !!!!
+__version__="0.5.0+"   #py2.7 & py3.5 !!!!
 
 try:
     from HTMLParser import HTMLParser
@@ -160,17 +160,22 @@ class VBuild:
 
             self.tags=[name]
 
-            if vp.script:
-                p1=vp.script.find("{")
-                p2=vp.script.rfind("}")
-                if 0 <= p1 <= p2:
-                    js= vp.script[p1:p2+1]
-                else:
-                    raise VBuildException("Component %s contains a bad script" % filename)                    
+            if vp.script and "class Component:" in vp.script:
+                ######################################################### python
+                self.script=mkPythonVueComponent(name,'#'+tplId,vp.script)
             else:
-                js="{}"
-            
-            self.script="""var %s = Vue.component('%s', %s);""" % (name,name,js.replace("{","{template:'#%s'," % tplId,1))
+                ######################################################### js
+                if vp.script:
+                    p1=vp.script.find("{")
+                    p2=vp.script.rfind("}")
+                    if 0 <= p1 <= p2:
+                        js= vp.script[p1:p2+1]
+                    else:
+                        raise VBuildException("Component %s contains a bad script" % filename)                    
+                else:
+                    js="{}"
+                
+                self.script="""var %s = Vue.component('%s', %s);""" % (name,name,js.replace("{","{template:'#%s'," % tplId,1))
 
             self.html=transHtml(self.html)
             self.script=transScript(self.script)
@@ -202,6 +207,78 @@ class VBuild:
 </script>
 """ % (self.style,self.html,self.script)
 
+def mkPythonVueComponent(name,template,code):
+    import pscript,json,inspect
+    code=code.replace("class Component:","class C:")
+    exec(code,globals(),locals())
+    assert "C" in locals()
+    klass=locals()["C"]
+    tpl="""
+    <span data--home-manatlan-Documents-python-wuy-examples-vueapp-web-comp>{{name}} {{cpt}}
+        {{hashtag}} {{wcpt}}
+        <button @click="inc()" ref="btn1">++</button>
+        <button @click="dinc()">**</button>
+    </span>"""
+
+    computeds=[]
+    watchs=[]
+    methods=[]
+    lifecycles=[]
+    datas={}
+    classname=klass.__name__
+    for oname,obj in vars(klass).items():
+        if callable(obj) and not oname.startswith("_") :
+            if oname.startswith("COMPUTED_"):
+                computeds.append('"%s": %s.prototype.%s,'%(oname[9:],classname,oname))
+            elif oname.startswith("WATCH_"):
+                #TODO: py2.7  : args=dict(zip(list(obj.func_code.co_varnames)[1:], list(obj.func_defaults)))
+                if obj.__defaults__:
+                    varwatch=obj.__defaults__[0]
+                    watchs.append('"%s": %s.prototype.%s,'%(varwatch,classname,oname))
+                else:
+                    raise VBuildException("Name is not specified")
+            elif oname in ["MOUNTED","CREATED"]:
+                lifecycles.append('"%s": %s.prototype.%s,'%(oname.lower(),classname,oname))
+            else:
+                methods.append('"%s": %s.prototype.%s,'%(oname,classname,oname))
+        else:
+            if not oname.startswith("_"):
+                if oname!="props": datas[oname]=obj
+
+    methods="\n".join(methods)
+    computeds="\n".join(computeds)
+    watchs="\n".join(watchs)
+    lifecycles="\n".join(lifecycles)
+    datas=json.dumps(datas)
+
+    pyjs=pscript.py2js(code).replace("_s_","$") #https://pscript.readthedocs.io/en/latest/api.html
+
+    return """
+var %(name)s=(function() {
+
+    %(pyjs)s
+
+    return Vue.component('%(name)s',{
+        "name": %(name)s,
+        "props": %(classname)s.prototype.props,
+        "template": "%(template)s",
+        "data": ()=>{
+            return %(datas)s
+        },
+        "computed": {
+            %(computeds)s
+        },
+        "methods": {
+            %(methods)s
+        },
+        "watch": {
+            %(watchs)s
+        },
+        %(lifecycles)s
+    })
+})();
+
+    """ % locals()
 
 
 def render(filename,content=None):
@@ -219,4 +296,3 @@ def render(filename,content=None):
 
 if __name__=="__main__":
     exec(open("./tests.py").read())
-    
