@@ -127,6 +127,23 @@ class TestVuePArser(unittest.TestCase):
         self.assertEqual(r.styles,[])
         self.assertEqual(r.scopedStyles,[])
 
+    def test_full(self):
+        h="""<template><div>XXX</div></template><style lang="sass">style</style><script lang="python">script</script>"""
+        r=vbuild.VueParser(h)
+        self.assertEqual(r.script,"script")
+        self.assertEqual(r.styles[0],"style")
+        self.assertEqual(r.script.type,"python")
+        self.assertEqual(r.styles[0].type,"sass")
+        self.assertEqual(r.html.type,None)
+
+        h="""<template><div>XXX</div></template><style scoped>style</style><script>script</script>"""
+        r=vbuild.VueParser(h)
+        self.assertEqual(r.script,"script")
+        self.assertEqual(r.scopedStyles[0],"style")
+        self.assertEqual(r.script.type,None)
+        self.assertEqual(r.scopedStyles[0].type,None)
+        self.assertEqual(r.html.type,None)
+
         
 class TesCss(unittest.TestCase):
     def test_css1(self):
@@ -250,17 +267,21 @@ export default {
   button {background:black}
 </style>
 """
-        if pkgutil.find_loader("css_html_js_minify"):
-            r=vbuild.VBuild("name.vue",h,minify=True)
-            self.assertEqual(r.tags,["name"])
-            self.assertEqual(r.style.count("*[data-name]"),2)
-            self.assertEqual(r.style.count("background"),3)
-            self.assertFalse(":scope" in str(r))
-            self.assertTrue("<div data-name>" in str(r))
-            self.assertTrue('<script type="text/x-template" id=tpl-name >' in str(r))
-            self.assertTrue("var name=Vue.component('name',{template:'#tpl-name',data(){return{c:0,}},methods:{inc(){this.c+=1;}}})" in str(r))
-        else:
-            print("can't test minify (miss package css-html-js-minify)")
+        oh=vbuild.transHtml
+        oj=vbuild.transScript
+        oc=vbuild.transStyle
+        try:
+            vbuild.transHtml=lambda x:"h"
+            vbuild.transScript=lambda x:"j"
+            vbuild.transStyle=lambda x:"c"
+            r=vbuild.VBuild("name.vue",h)
+            self.assertEqual(r.html,"h")
+            self.assertEqual(r.script,"j")
+            self.assertEqual(r.style,"c")
+        finally:
+            vbuild.transHtml=oh
+            vbuild.transScript=oj
+            vbuild.transStyle=oc
 
     def test_composant_min(self):
         h="""
@@ -314,7 +335,7 @@ export default {
         r=vbuild.VBuild("name.vue",h)
         self.assertEqual(r.script,"""var name = Vue.component('name', {template:'#tpl-name',\n    mounted() {}\n});""")
 
-    def test_sass(self):    # so it's GAE memcach'able !
+    def test_sass(self):    
         if pkgutil.find_loader("scss"):
             h="""<template><div>XXX</div></template>
             <Style scoped lang="sass">
@@ -329,7 +350,7 @@ export default {
         else:
             print("can't test sass")
 
-    def test_less(self):    # so it's GAE memcach'able !
+    def test_less(self):   
         if pkgutil.find_loader("lesscpy"):
             h="""<template><div>XXX</div></template>
             <Style scoped Lang = "leSS" >
@@ -367,6 +388,13 @@ class RealTests(unittest.TestCase):
             for i in glob.glob("vues/*.vue"):
                 r=vbuild.VBuild(i)
                 self.assertTrue(str(r))
+
+            self.assertTrue(str(vbuild.render( "vues/list.vue")))
+            self.assertTrue(str(vbuild.render( "vues/*.vue")))
+            self.assertTrue(str(vbuild.render( "*/*.vue")))
+            self.assertTrue(str(vbuild.render( ["vues/req.vue","vues/todo.vue"] )))
+            self.assertTrue(str(vbuild.render( glob.glob("vues/*.vue"))))
+
         else:
             print("***WARNING*** : Don't test real vue files (you haven't a vues folder with .vue files)")
 

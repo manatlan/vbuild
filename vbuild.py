@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-import re,os,json
+import re,os,json,glob,itertools
 # #############################################################################
 #    Copyright (C) 2018 manatlan manatlan[at]gmail(dot)com
 #
@@ -8,8 +8,7 @@ import re,os,json
 #
 # https://github.com/manatlan/vbuild
 # #############################################################################
-__version__="0.4.5"   #py2.7 & py3.5 !!!!
-
+__version__="0.5.0"   #py2.7 & py3.5 !!!!
 
 try:
     from HTMLParser import HTMLParser
@@ -20,12 +19,15 @@ except ImportError:
     import urllib.request as urlrequest
     import urllib.parse as urlparse
 
-try:
-    from css_html_js_minify import html_minify, js_minify, css_minify
-    MINIFY=True
-except ImportError:
-    html_minify = js_minify = css_minify = lambda x:x
-    MINIFY=False
+
+transHtml = lambda x:x    # override them to use your own transformer/minifier
+transStyle = lambda x:x
+transScript = lambda x:x
+
+partial=""
+
+class VBuildException(Exception): pass
+
 
 def minimize(txt):
     data={
@@ -41,22 +43,32 @@ def minimize(txt):
     return json.loads(buf)["compiledCode"]
 
 
-def styleLess(css):  #lang ="less"  // lesscpy
-    try:
-        import lesscpy
-        from six import StringIO  
-        return lesscpy.compile( StringIO(css) , minify=True)
-    except ImportError:
-        print("***WARNING*** : miss 'less' preprocessor : sudo pip install lesscpy")
+def preProcessCSS(css,partial=""):
+    if css.type in ["scss","sass"]:
+        try:
+            from scss.compiler import compile_string   #lang="scss" 
+            return compile_string(partial+"\n"+css) 
+        except ImportError:
+            print("***WARNING*** : miss 'sass' preprocessor : sudo pip install pyscss")
+            return css
+    elif css.type in ["less"]:
+        try:
+            import lesscpy
+            from six import StringIO  
+            return lesscpy.compile( StringIO(partial+"\n"+css) , minify=True)
+        except ImportError:
+            print("***WARNING*** : miss 'less' preprocessor : sudo pip install lesscpy")
+            return css
+    else:
         return css
 
-def styleSass(css):  #lang ="scss"/"sass"  //pyscss
-    try:
-        from scss.compiler import compile_string   #lang="scss" 
-        return compile_string(css) 
-    except ImportError:
-        print("***WARNING*** : miss 'sass' preprocessor : sudo pip install pyscss")
-        return css
+
+
+class Content(str):
+    def __new__(cls, v, type=None):
+        s= str.__new__(cls, v and v.strip("\n\r\t "))
+        s.type=type
+        return s
 
 class VueParser(HTMLParser):
     def __init__(self,buf,name=""):
@@ -64,6 +76,7 @@ class VueParser(HTMLParser):
         self.name=name
         self._p1=None
         self._level=0
+        self._scriptLang=None
         self._styleLang=None
         self.rootTag=None
         self.html,self.script,self.styles,self.scopedStyles=None,None,[],[]
@@ -75,6 +88,8 @@ class VueParser(HTMLParser):
         attributes=dict([(k.lower(),v and v.lower()) for k,v in attrs])
         if tag=="style" and attributes.get("lang",None):
             self._styleLang= attributes["lang"]
+        if tag=="script" and attributes.get("lang",None):
+            self._scriptLang= attributes["lang"]
         if self._level==1 and tag=="template":
             if self._p1 is not None: raise VBuildException( "Component %s contains more than one template" % self.name)
             self._p1=self.getOffset()+len(self.get_starttag_text())
@@ -84,22 +99,17 @@ class VueParser(HTMLParser):
 
     def handle_endtag(self, tag):
         if tag=="template" and self._p1: # don't watch the level (so it can accept mal formed html
-            self.html=self.rawdata[self._p1:self.getOffset()].strip("\n\r\t ")
+            self.html=Content(self.rawdata[self._p1:self.getOffset()])
         self._level-=1
         
     def handle_data(self, data):
         if self._level==1:
-            if self._tag=="script": self.script=data.strip("\n\r\t ")
+            if self._tag=="script": self.script=Content(data,self._scriptLang)
             if self._tag=="style": 
-                if self._styleLang in ["scss","sass"]:
-                    data=styleSass(data)
-                elif self._styleLang in ["less"]:
-                    data=styleLess(data)
-
                 if "scoped" in self.get_starttag_text().lower():
-                    self.scopedStyles.append(data.strip("\n\r\t "))
+                    self.scopedStyles.append( Content(data,self._styleLang) )
                 else:
-                    self.styles.append(data.strip("\n\r\t "))
+                    self.styles.append( Content(data,self._styleLang))
                     
     def getOffset(self):
         lineno, off = self.getpos()
@@ -118,10 +128,9 @@ def mkPrefixCss(css,prefix=""):
         lines.append( ", ".join(l) +" {"+decs )
     return "\n".join(lines).strip("\n ")
 
-class VBuildException(Exception): pass
 
 class VBuild:
-    def __init__(self,filename,content=None,minify=False):  # old vueToTplScript (only one style default scoped !)
+    def __init__(self,filename,content=None):  # old vueToTplScript (only one style default scoped !)
         if content is None:
             try:
                 with open(filename,"r+") as fid:
@@ -141,6 +150,16 @@ class VBuild:
         else:
             html=re.sub(r'^<([\w-]+)',r"<\1 "+dataId,vp.html)
 
+            self.html="""<script type="text/x-template" id="%s">%s</script>""" % (tplId,html)
+            self.style=""
+            
+            for style in vp.styles:
+                self.style+=mkPrefixCss( preProcessCSS(style,partial) )+"\n"
+            for style in vp.scopedStyles:
+                self.style+=mkPrefixCss( preProcessCSS(style,partial),"*[%s]" % dataId)+"\n"
+
+            self.tags=[name]
+
             if vp.script:
                 p1=vp.script.find("{")
                 p2=vp.script.rfind("}")
@@ -151,20 +170,11 @@ class VBuild:
             else:
                 js="{}"
             
-            self.html="""<script type="text/x-template" id="%s">%s</script>""" % (tplId,html)
             self.script="""var %s = Vue.component('%s', %s);""" % (name,name,js.replace("{","{template:'#%s'," % tplId,1))
-            self.style=""
-            # if vp.scopedStyles: self.style=mkPrefixCss("\n".join(vp.scopedStyles),"%s[%s]" % (vp.rootTag,dataId))
-            if vp.scopedStyles: self.style=mkPrefixCss("\n".join(vp.scopedStyles),"*[%s]" % dataId)
-            if vp.styles: self.style+="\n"+mkPrefixCss("\n".join(vp.styles))
-            self.tags=[name]
 
-            if minify:
-                if not MINIFY:
-                    print("***WARNING*** : minify not available : sudo pip install css-html-js-minify")
-                self.html=html_minify(self.html)
-                self.script=js_minify(self.script)
-                self.style=css_minify(self.style)
+            self.html=transHtml(self.html)
+            self.script=transScript(self.script)
+            self.style=transStyle(self.style)
 
     def __add__(self,o):
         join=lambda *l: ("\n".join(l)).strip("\n")
@@ -194,5 +204,19 @@ class VBuild:
 
 
 
+def render(filename,content=None):
+    isPattern=lambda f: ("*" in f) or ("?" in f)
+    if content:
+        if isPattern(filename): raise VBuildException("Can't have a pattern name when content is provided !")
+        return VBuild(filename,content)
+    else:
+        files=[filename] if not isinstance(filename,list) else filename
+        files=[glob.glob(i) if isPattern(i) else [i] for i in files]
+        files=list(itertools.chain(*files))
+        return sum( [VBuild(f) for f in files] )
+            
+
+
 if __name__=="__main__":
     exec(open("./tests.py").read())
+    

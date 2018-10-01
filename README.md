@@ -2,6 +2,8 @@
 
 "Compile" your [VUEJS](https://vuejs.org/) [component (*.vue)](https://fr.vuejs.org/v2/guide/single-file-components.html) to standalone html/js/css ... python only (no need of nodejs). BTW it provides a js-minimizer (es2015 compliant code)
 
+**BREAKING NEWS** : a future version will be able to make your component (script) in **PURE PYTHON** ! (my tests are really great ! stay tuned !!)
+
 It's just an utility to extract HTML(template), SCRIPT and STYLE from a VUE/SFC component (*.vue).
 It's PURE python (py2 & py3 compatible), no nodejs ! It's fully unitested (100% !)
 
@@ -12,29 +14,14 @@ It won't replace webpack/nodejs/vue-cli, it fills the _"Sometimes you have to wo
 ```python
 import vbuild
 
-sfc=vbuild.VBuild("mycompo.vue")
-print( sfc.html )
-print( sfc.script )
-print( sfc.style )
+c=vbuild.render("mycompo.vue")
+#c=vbuild.render("vues/*.vue")
+#c=vbuild.render( ["c1.vue","c2.vue"] )
+#c=vbuild.render( ["main.vue","vues/*.vue"] )
+print( c.html )
+print( c.script )
+print( c.style )
 ```
-
-or
-
-```python
-import vbuild
-
-ll=[]
-ll.append( vbuild.VBuild("c1.vue") )
-ll.append( vbuild.VBuild("c2.vue") )
-
-s=sum(ll)
-
-print( s.html )
-print( s.script )
-print( s.style )
-```
-
-By default, VBuild won't minify things. But you can change that by using `vbuild.VBuild("mycompo.vue", minify=True)`, but you'll need to install [css-html-js-minify](https://pypi.org/project/css-html-js-minify/).
 
 You can use [sass](https://sass-lang.com/)(new syntax only) (using `<style lang="scss"></style>` or `<style lang="sass"></style>`) or [less](http://lesscss.org/) (using `<style lang="less"></style>`) in your styles. But you'll need to install [pyscss](https://pypi.org/project/pyScss/) or [lesscpy](https://pypi.org/project/lesscpy/), depending on your needs.
 
@@ -56,13 +43,22 @@ min=vbuild.minimize(js)
  * styles are minimized (remove comments and spaces)
  
 
-Its main purpose is to let you use components (.vue files) in your vuejs app, without a full nodejs stack. It's up to you to create your generator, to extract the things, and create your "index.html" file. It's a 5 lines of python code; example:
+Its main purpose is to let you use components (.vue files) in your vuejs app, without a full nodejs stack. It's up to you to create your generator, to extract the things, and create your "index.html" file. It's a 4 lines of python code; example:
 
 ```python
-import vbuild,glob
-r=sum([vbuild.VBuild(i,minify=True) for i in glob.glob("*.vue")+glob.glob("*/*.vue")])
+import vbuild
 buf=readYourTemplate("index.tpl") # should contains a tag "<!-- HERE -->" that would be substituted
-buf=buf.replace("<!-- HERE -->",str(r))
+buf=buf.replace("<!-- HERE -->",str( vbuild.render( "vues/*.vue" ) ) )
+writeYourTemplate("index.html",buf)
+```
+
+If you use `sass` or `less`, you can define partial like this:
+
+```python
+import vbuild
+vbuild.partial="$color: red;"
+buf=readYourTemplate("index.tpl") # should contains a tag "<!-- HERE -->" that would be substituted
+buf=buf.replace("<!-- HERE -->",str( vbuild.render( "vues/*.vue" ) ) )
 writeYourTemplate("index.html",buf)
 ```
 
