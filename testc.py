@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import wuy
 import vbuild
 
 c1="""
@@ -47,19 +46,18 @@ class Component:
 </style>
 """
 
-class Jo(wuy.Window):
-    def _render(self,p):
-        vbuild.partial="$v: 12px;"
+vbuild.partial="$v: 12px;"
 
-        return """
-        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-        %s
-        <div id="app">
-            <comp name="n1"></comp>
-            <comp name="n2"></comp>
-        </div>
-        </script>
-        <script>new Vue({el:"#app"})</script>    
-        """ % vbuild.VBuild("comp.vue",c1)
+with open("aeff.html","w+") as fid:
+    fid.write("""
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+%s
+<div id="app">
+    <comp name="n1"></comp>
+    <comp name="n2"></comp>
+</div>
+</script>
+<script>new Vue({el:"#app"})</script>    
+""" % vbuild.VBuild("comp.vue",c1)
+    )
 
-Jo()
