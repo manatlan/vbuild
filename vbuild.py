@@ -225,27 +225,31 @@ def mkPythonVueComponent(name,template,code):
     methods=[]
     lifecycles=[]
     classname=klass.__name__
+    props=[]
     for oname,obj in vars(klass).items():
-        if callable(obj) and not oname.startswith("_") :
-            if oname.startswith("COMPUTED_"):
-                computeds.append('"%s": %s.prototype.%s,'%(oname[9:],classname,oname))
-            elif oname.startswith("WATCH_"):
-                if obj.__defaults__:
-                    varwatch=obj.__defaults__[0] #not neat (take the first default as whatch var)
-                    watchs.append('"%s": %s.prototype.%s,'%(varwatch,classname,oname))
+        if callable(obj):
+            if not oname.startswith("_") :
+                if oname.startswith("COMPUTED_"):
+                    computeds.append('"%s": %s.prototype.%s,'%(oname[9:],classname,oname))
+                elif oname.startswith("WATCH_"):
+                    if obj.__defaults__:
+                        varwatch=obj.__defaults__[0] #not neat (take the first default as whatch var)
+                        watchs.append('"%s": %s.prototype.%s,'%(varwatch,classname,oname))
+                    else:
+                        raise VBuildException("name='var_to_watch' is not specified")
+                elif oname in ["MOUNTED","CREATED"]:
+                    lifecycles.append('"%s": %s.prototype.%s,'%(oname.lower(),classname,oname))
                 else:
-                    raise VBuildException("name='var_to_watch' is not specified")
-            elif oname in ["MOUNTED","CREATED"]:
-                lifecycles.append('"%s": %s.prototype.%s,'%(oname.lower(),classname,oname))
-            else:
-                methods.append('"%s": %s.prototype.%s,'%(oname,classname,oname))
+                    methods.append('"%s": %s.prototype.%s,'%(oname,classname,oname))
+            elif oname=="__init__":
+                props=list(obj.__code__.co_varnames)[1:]
 
     methods="\n".join(methods)
     computeds="\n".join(computeds)
     watchs="\n".join(watchs)
     lifecycles="\n".join(lifecycles)
 
-    pyjs=pscript.py2js(code).replace("_s_","$") #https://pscript.readthedocs.io/en/latest/api.html
+    pyjs=pscript.py2js(code) #https://pscript.readthedocs.io/en/latest/api.html
 
     return """
 var %(name)s=(function() {
@@ -254,10 +258,14 @@ var %(name)s=(function() {
 
     return Vue.component('%(name)s',{
         "name": %(name)s,
-        "props": %(classname)s.prototype.props,
+        "props": %(props)s,
         "template": "%(template)s",
         "data": function() {
-            return JSON.parse(JSON.stringify( new %(classname)s() ));
+            var params=[]
+            for(var n of %(props)s)
+                params.push( this.$props[n] )
+            var i = new %(classname)s(...params)
+            return JSON.parse(JSON.stringify( i ));
         },
         "computed": {
             %(computeds)s
@@ -289,4 +297,5 @@ def render(filename,content=None):
 
 
 if __name__=="__main__":
-    exec(open("./tests.py").read())
+    exec(open("./test_py_comp.py").read())
+    # exec(open("./tests.py").read())
