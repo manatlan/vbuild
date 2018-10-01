@@ -259,12 +259,11 @@ var %(name)s=(function() {
     return Vue.component('%(name)s',{
         "name": %(name)s,
         "props": %(props)s,
-        "template": "%(template)s",
+        "template": `%(template)s`,
         "data": function() {
-            var params=[]
-            for(var n of %(props)s)
-                params.push( this.$props[n] )
-            var i = new %(classname)s(...params)
+            var props=[]
+            for(var n of %(props)s) props.push( this.$props[n] )
+            var i = new %(classname)s(...props)
             return JSON.parse(JSON.stringify( i ));
         },
         "computed": {

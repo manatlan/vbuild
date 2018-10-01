@@ -18,7 +18,7 @@ class Component:
         print("DATA INIT",name)
         self.cpt=0
         self.wcpt=""
-        self.originalName=name
+        self.originalName=name  # copy the props.name
 
     def inc(self):
         print("++",self.name)
