@@ -275,7 +275,7 @@ export default {
             vbuild.transScript=lambda x:"j"
             vbuild.transStyle=lambda x:"c"
             r=vbuild.VBuild("name.vue",h)
-            self.assertEqual(r.html,"h")
+            self.assertEqual(r.html,'<script type="text/x-template" id="tpl-name">h</script>')
             self.assertEqual(r.script,"j")
             self.assertEqual(r.style,"c")
         finally:
@@ -347,6 +347,16 @@ export default {
             r=vbuild.VBuild("comp.vue",h)
             self.assertTrue("6px" in r.style)
             self.assertTrue("#ff8000" in r.style)
+            
+            h="""<template><div>XXX</div></template>
+            <Style scoped lang="sass">
+            body {
+                font: $unknown;
+            }
+            </style>"""
+            with self.assertRaises(vbuild.VBuildException):     # vbuild.VBuildException: Component 'comp.vue' got a CSS-PreProcessor trouble : Error evaluating expression:
+                vbuild.VBuild("comp.vue",h)
+
         else:
             print("can't test sass")
 
@@ -360,38 +370,31 @@ export default {
             </style>"""
             r=vbuild.VBuild("comp.vue",h)
             self.assertTrue("6px" in r.style)
+            
+            h="""<template><div>XXX</div></template>
+            <Style scoped lang="less">
+            body {
+                font: @unknown;
+            }
+            </style>"""
+            with self.assertRaises(vbuild.VBuildException):     # vbuild.VBuildException: Component 'comp.vue' got a CSS-PreProcessor trouble : Error evaluating expression:
+                vbuild.VBuild("comp.vue",h)            
         else:
             print("can't test less")
 
-# class TestMinimize(unittest.TestCase):
-#     def test_bad(self):
-#         s="""
-#         kk{{_=*jùhgj;://\\}$bc(.[hhh]
-#         """
-#         x=vbuild.minimize(s)
-#         self.assertEqual( x,"")
 
-
-#     def test_min(self):
-#         s="""
-#         async function  jo(...a) {
-#             var f=(...a) => {let b=12}
-#         }
-#         """
-#         x=vbuild.minimize(s)
-#         self.assertTrue( "$jscomp" in x)
-
-class RealTests(unittest.TestCase):
+class TestRenderFiles(unittest.TestCase):
     def testfiles(self):
         if os.path.isdir("vues"):
             import glob
             for i in glob.glob("vues/*.vue"):
-                r=vbuild.VBuild(i)
+                r=vbuild.render(i)
                 self.assertTrue(str(r))
 
             self.assertTrue(str(vbuild.render( "vues/list.vue")))
             self.assertTrue(str(vbuild.render( "vues/*.vue")))
             self.assertTrue(str(vbuild.render( "*/*.vue")))
+            self.assertTrue(str(vbuild.render( "vues/req.vue", "vues/todo.vue" )))
             self.assertTrue(str(vbuild.render( ["vues/req.vue","vues/todo.vue"] )))
             self.assertTrue(str(vbuild.render( glob.glob("vues/*.vue"))))
 
@@ -400,8 +403,201 @@ class RealTests(unittest.TestCase):
 
     def test_bad_file(self):
         with self.assertRaises(vbuild.VBuildException):
-            vbuild.VBuild("unknown_file.vue") # No such file or directory
+            vbuild.render("unknown_file.vue") # No such file or directory
+
+class TestPyComponent(unittest.TestCase):
+    """ urgghh ... minimal tests here ;-) """
+    
+    def test_ok(self):
+        c="""<template>
+    <div>
+        {{name}} {{cpt}}
+        <button @click="inc()">++</button>
+    </div>
+</template>
+<script lang="python">
+
+class Component:
+    def __init__(self, name):
+        self.cpt=0
+
+    def inc(self):
+        self.cpt+=1
+
+</script>
+<style scoped>
+    :scope {background:#EEE}
+</style>"""
+        r=vbuild.VBuild("pyc.vue",c)
+        self.assertTrue("_pyfunc_op_instantiate" in r.script)
+        self.assertTrue("Vue.component(" in r.script)
+
+    def test_ko_syntax(self):
+        c="""<template>
+    <div>
+        {{name}} {{cpt}}
+        <button @click="inc()">++</button>
+    </div>
+</template>
+<script lang="python">
+
+class Component:
+    def __init__(self, name):
+        self.cpt=0
+
+    def inc(self)           # miss : !!!
+        self.cpt+=1
+
+</script>
+<style scoped>
+    :scope {background:#EEE}
+</style>"""
+        with self.assertRaises(vbuild.VBuildException): # Python Component 'pyc.vue' is broken
+            vbuild.VBuild("pyc.vue",c)
+
+    def test_ko_semantic(self):
+        c="""<template>
+    <div>
+        {{name}} {{cpt}}
+        <button @click="inc()">++</button>
+    </div>
+</template>
+<script lang="python">
+
+class ComponentV0:                  # bad class name
+    def __init__(self, name):
+        self.cpt=0
+
+    def inc(self):
+        self.cpt+=1
+
+</script>
+<style scoped>
+    :scope {background:#EEE}
+</style>"""
+        with self.assertRaises(vbuild.VBuildException): # Component pyc.vue contains a bad script
+            vbuild.VBuild("pyc.vue",c)
+
+class TestPy2Js(unittest.TestCase):
+    def test_1(self):
+        c="class Component: pass"
+        js=vbuild.mkPythonVueComponent("toto","<div></div>",c)
+        self.assertTrue("_pyfunc_op_instantiate" in js)
+        self.assertTrue("Vue.component('toto',{" in js)
+        self.assertTrue('name: "toto",' in js)
+        self.assertTrue('template: `<div></div>`,' in js)
+        
+    def test_MOUNTED(self):
+        c="""class Component:
+  def MOUNTED(self):
+    pass"""
+        js=vbuild.mkPythonVueComponent("toto","<div></div>",c)
+        self.assertTrue("_pyfunc_op_instantiate" in js)
+        self.assertTrue("Vue.component(" in js)
+        self.assertTrue('mounted: C.prototype.MOUNTED,' in js)
+
+    def test_CREATED(self):
+        c="""class Component:
+  def CREATED(self):
+    pass"""
+        js=vbuild.mkPythonVueComponent("toto","<div></div>",c)
+        self.assertTrue("_pyfunc_op_instantiate" in js)
+        self.assertTrue("Vue.component(" in js)
+        self.assertTrue('created: C.prototype.CREATED,' in js)
 
 
+    def test_COMPUTED(self):
+        c="""class Component:
+  def COMPUTED_var(self):
+    pass"""
+        js=vbuild.mkPythonVueComponent("toto","<div></div>",c)
+        self.assertTrue("_pyfunc_op_instantiate" in js)
+        self.assertTrue("Vue.component(" in js)
+        self.assertTrue('var: C.prototype.COMPUTED_var,' in js)
+
+    def test_WATCH(self):
+        c="""class Component:
+  def WATCH_var(self,old,new,name="$store.state.yo"):
+    pass"""
+        js=vbuild.mkPythonVueComponent("toto","<div></div>",c)
+        self.assertTrue("_pyfunc_op_instantiate" in js)
+        self.assertTrue("Vue.component(" in js)
+        self.assertTrue('"$store.state.yo": C.prototype.WATCH_var,' in js)
+
+    def test_WATCH_ko(self):
+        c="""class Component:
+  def WATCH_var(self):
+    pass"""
+        with self.assertRaises(vbuild.VBuildException): # vbuild.VBuildException: name='var_to_watch' is not specified in WATCH_var
+            vbuild.mkPythonVueComponent("toto","<div></div>",c)
+
+    def test_INIT_PROPS(self):
+        c="""class Component:
+  def __init__(self,prop1="?",prop2="?"):
+    self.val1=42
+    self.val2=True
+    self.val3="hello"
+"""
+        js=vbuild.mkPythonVueComponent("toto","<div></div>",c)
+        self.assertTrue("_pyfunc_op_instantiate" in js)
+        self.assertTrue("Vue.component(" in js)
+        self.assertTrue('''props: ['prop1', 'prop2'],''' in js)
+        self.assertTrue("for(var n of ['prop1', 'prop2']) props.push( this.$props[n] )" in js)
+        jsinit="""C.prototype.__init__ = function (prop1, prop2) {
+    prop1 = (prop1 === undefined) ? "?": prop1;
+    prop2 = (prop2 === undefined) ? "?": prop2;
+    this.val1 = 42;
+    this.val2 = true;
+    this.val3 = "hello";
+    return null;
+};"""
+        self.assertTrue(jsinit in js)
+
+    def test_METHODS(self):
+        c="""class Component:
+  def method1(self,nb):
+    self["$parent"].nb=nb;
+"""
+        js=vbuild.mkPythonVueComponent("toto","<div></div>",c)
+        self.assertTrue("_pyfunc_op_instantiate" in js)
+        self.assertTrue("Vue.component(" in js)
+        self.assertTrue('''method1: C.prototype.method1,''' in js)
+        self.assertTrue('''this["$parent"].nb = nb;''' in js)
+
+class TestTrans(unittest.TestCase):
+    def test_1(self):
+        vbuild.transScript=lambda x: x.upper()
+        vbuild.transStyle=lambda x: x+"/*Hello*/"
+        vbuild.transHtml=lambda x: x.upper()
+        r=vbuild.VBuild("toto.vue","<template><div></div></template>")
+        self.assertTrue("VUE.COMPONENT('TOTO'" in r.script)
+        self.assertTrue('<script type="text/x-template" id="tpl-toto"><DIV DATA-TOTO></DIV></script>' in r.html)
+        self.assertEqual(r.style,"/*Hello*/")
+        
+
+    def tearDown(self):
+        vbuild.transScript=lambda x: x
+        vbuild.transStyle=lambda x: x
+        vbuild.transHtml=lambda x: x
+    
+
+class TestMinimize(unittest.TestCase):
+    def test_bad(self):
+        s="""
+        kk{{_=*jùhgj;://\\}$bc(.[hhh]
+        """
+        x=vbuild.minimize(s)
+        self.assertEqual( x,"")
+
+
+    def test_min(self):
+        s="""
+        async function  jo(...a) {
+            var f=(...a) => {let b=`hello`}
+        }
+        """
+        x=vbuild.minimize(s)
+        self.assertTrue( "$jscomp" in x)
+        
 if __name__ == '__main__':
     unittest.main()

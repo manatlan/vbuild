@@ -17,6 +17,6 @@ setuptools.setup(
         "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
         "Operating System :: OS Independent",
     ),
-    install_requires=[],
+    install_requires=["pscript"],
     keywords=['vuejs', 'vue', 'html', 'javascript', 'style', 'minimize', 'es2015'],
 )

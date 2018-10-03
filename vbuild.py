@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-import re,os,json,glob,itertools
 # #############################################################################
 #    Copyright (C) 2018 manatlan manatlan[at]gmail(dot)com
 #
@@ -9,6 +8,8 @@ import re,os,json,glob,itertools
 # https://github.com/manatlan/vbuild
 # #############################################################################
 __version__="0.5.0+"   #py2.7 & py3.5 !!!!
+
+import re,os,json,glob,itertools,traceback,pscript,subprocess
 
 try:
     from HTMLParser import HTMLParser
@@ -19,19 +20,24 @@ except ImportError:
     import urllib.request as urlrequest
     import urllib.parse as urlparse
 
-
 transHtml = lambda x:x    # override them to use your own transformer/minifier
 transStyle = lambda x:x
 transScript = lambda x:x
 
 partial=""
+usePyStdLib=False   # False : each component generate its needs.
+                    # True  : each component use minimal js, but you'll need to add "pscript.get_full_std_lib()" to the scripts
+
 
 class VBuildException(Exception): pass
 
 
-def minimize(txt):
+def minimize(code):
+    """ JS-minimize (transpile to ES5 JS compliant) thru a online service
+        (https://closure-compiler.appspot.com/compile)
+    """
     data={
-      'js_code':txt,
+      'js_code':code,
       'compilation_level':'SIMPLE_OPTIMIZATIONS',
       'output_format':'json',
       'output_info':'compiled_code',
@@ -43,7 +49,31 @@ def minimize(txt):
     return json.loads(buf)["compiledCode"]
 
 
+def jsmin(code): # need java & pip/closure
+    """ JS-minimize (transpile to ES5 JS compliant) with closure-compiler
+        (pip package 'closure', need java !)
+    """
+    try:
+        import closure  # py2 or py3
+    except ImportError:
+        print("***WARNING*** : miss 'closure' package : sudo pip install closure")
+        return code
+    cmd = ["java", "-jar", closure.get_jar_filename()] 
+    try:
+        p = subprocess.Popen(cmd,stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+    except Exception as e:
+        raise VBuildException("jsmin error: %s"%e)
+    out,err=p.communicate( code.encode("utf8") )
+    if p.returncode==0:
+        return out.decode("utf8")
+    else:
+        raise VBuildException("jsmin error:"+err.decode("utf8"))
+
+
 def preProcessCSS(css,partial=""):
+    """ Apply css-preprocessing on css rules (according css.type) using a partial or not
+        return the css pre-processed
+    """
     if css.type in ["scss","sass"]:
         try:
             from scss.compiler import compile_string   #lang="scss" 
@@ -62,16 +92,20 @@ def preProcessCSS(css,partial=""):
     else:
         return css
 
-
-
 class Content(str):
+    """ A class to create a string with a property 'type' """
     def __new__(cls, v, type=None):
         s= str.__new__(cls, v and v.strip("\n\r\t "))
         s.type=type
         return s
 
 class VueParser(HTMLParser):
+    """ Just a class to extract <template/><script/><style/> from a buffer
+    """
     def __init__(self,buf,name=""):
+        """ Extract stuff from the vue/buffer 'buf'
+            (name is just useful for naming the component in exceptions)
+        """
         HTMLParser.__init__(self)
         self.name=name
         self._p1=None
@@ -119,6 +153,9 @@ class VueParser(HTMLParser):
         return rtn + off        
 
 def mkPrefixCss(css,prefix=""):
+    """Add the prexix (css selector) to all rules in the 'css'
+       (used to scope style in context)
+    """
     lines=[]
     css=re.sub(re.compile("/\*.*?\*/",re.DOTALL ) ,"" ,css)
     css=re.sub(re.compile("[ \t\n]+",re.DOTALL ) ," " ,css)
@@ -130,14 +167,19 @@ def mkPrefixCss(css,prefix=""):
 
 
 class VBuild:
-    def __init__(self,filename,content=None):  # old vueToTplScript (only one style default scoped !)
-        if content is None:
-            try:
-                with open(filename,"r+") as fid:
-                    content=fid.read()
-            except IOError as e:
-                raise VBuildException(str(e))
+    """ the main class, provide an instance :
 
+        .style : contains all the styles (scoped or not)
+        .script: contains a (js) Vue.component() statement to initialize the component
+        .html  : contains the <script type="text/x-template"/>
+        .tags  : list of component's name whose are in the vbuild instance
+    """
+    def __init__(self,filename,content):
+        """ Create a VBuild class, by providing a :
+                filename: which will be used to name the component, and create the namespace for the template
+                content: the strig buffer which contains the sfc/vue component
+        
+        """
         name=os.path.basename(filename)[:-4]
         unique = filename[:-4].replace("/","-").replace("\\","-").replace(":","-")
         # unique = name+"-"+''.join(random.choice(string.letters + string.digits) for _ in range(8))
@@ -150,19 +192,26 @@ class VBuild:
         else:
             html=re.sub(r'^<([\w-]+)',r"<\1 "+dataId,vp.html)
 
-            self.html="""<script type="text/x-template" id="%s">%s</script>""" % (tplId,html)
+            self.html="""<script type="text/x-template" id="%s">%s</script>""" % (tplId, transHtml(html) )
             self.style=""
             
-            for style in vp.styles:
-                self.style+=mkPrefixCss( preProcessCSS(style,partial) )+"\n"
-            for style in vp.scopedStyles:
-                self.style+=mkPrefixCss( preProcessCSS(style,partial),"*[%s]" % dataId)+"\n"
+            try:
+                for style in vp.styles:
+                    self.style+=mkPrefixCss( preProcessCSS(style,partial) )+"\n"
+                for style in vp.scopedStyles:
+                    self.style+=mkPrefixCss( preProcessCSS(style,partial),"*[%s]" % dataId)+"\n"
+            except Exception as e:
+                raise VBuildException("Component '%s' got a CSS-PreProcessor trouble : %s" % (filename,e))
+                
 
             self.tags=[name]
 
             if vp.script and "class Component:" in vp.script:
                 ######################################################### python
-                self.script=mkPythonVueComponent(name,'#'+tplId,vp.script)
+                try:
+                    self.script=mkPythonVueComponent(name,'#'+tplId,vp.script, not usePyStdLib)
+                except Exception as e:
+                    raise VBuildException("Python Component '%s' is broken : %s" % (filename,traceback.format_exc()))
             else:
                 ######################################################### js
                 if vp.script:
@@ -177,7 +226,6 @@ class VBuild:
                 
                 self.script="""var %s = Vue.component('%s', %s);""" % (name,name,js.replace("{","{template:'#%s'," % tplId,1))
 
-            self.html=transHtml(self.html)
             self.script=transScript(self.script)
             self.style=transStyle(self.style)
 
@@ -197,6 +245,7 @@ class VBuild:
     def __setstate__(self, d):
         self.__dict__ = d
     def __repr__(self):
+        """ return an html ready represenation of the component(s) """
         return """
 <style>
 %s
@@ -207,18 +256,17 @@ class VBuild:
 </script>
 """ % (self.style,self.html,self.script)
 
-def mkPythonVueComponent(name,template,code):
-    import pscript,json,inspect
-    code=code.replace("class Component:","class C:")
+def mkPythonVueComponent(name,template,code,genStdLibMethods=True):
+    """ Transpile the component 'name', which have the template 'template',
+        and the code 'code' (which should contains a valid Component class)
+        to a valid Vue.component js statement.
+        
+        genStdLibMethods : generate own std lib method inline (with the js)
+                (if False: use pscript.get_full_std_lib() to get them)
+    """
+    code=code.replace("class Component:","class C:")    # minimize class name (todo: use py2js option for that)
     exec(code,globals(),locals())
-    assert "C" in locals()
     klass=locals()["C"]
-    tpl="""
-    <span data--home-manatlan-Documents-python-wuy-examples-vueapp-web-comp>{{name}} {{cpt}}
-        {{hashtag}} {{wcpt}}
-        <button @click="inc()" ref="btn1">++</button>
-        <button @click="dinc()">**</button>
-    </span>"""
 
     computeds=[]
     watchs=[]
@@ -230,17 +278,17 @@ def mkPythonVueComponent(name,template,code):
         if callable(obj):
             if not oname.startswith("_") :
                 if oname.startswith("COMPUTED_"):
-                    computeds.append('"%s": %s.prototype.%s,'%(oname[9:],classname,oname))
+                    computeds.append('%s: %s.prototype.%s,'%(oname[9:],classname,oname))
                 elif oname.startswith("WATCH_"):
                     if obj.__defaults__:
                         varwatch=obj.__defaults__[0] #not neat (take the first default as whatch var)
                         watchs.append('"%s": %s.prototype.%s,'%(varwatch,classname,oname))
                     else:
-                        raise VBuildException("name='var_to_watch' is not specified")
+                        raise VBuildException("name='var_to_watch' is not specified in %s" % oname)
                 elif oname in ["MOUNTED","CREATED"]:
-                    lifecycles.append('"%s": %s.prototype.%s,'%(oname.lower(),classname,oname))
+                    lifecycles.append('%s: %s.prototype.%s,'%(oname.lower(),classname,oname))
                 else:
-                    methods.append('"%s": %s.prototype.%s,'%(oname,classname,oname))
+                    methods.append('%s: %s.prototype.%s,'%(oname,classname,oname))
             elif oname=="__init__":
                 props=list(obj.__code__.co_varnames)[1:]
 
@@ -249,7 +297,7 @@ def mkPythonVueComponent(name,template,code):
     watchs="\n".join(watchs)
     lifecycles="\n".join(lifecycles)
 
-    pyjs=pscript.py2js(code) #https://pscript.readthedocs.io/en/latest/api.html
+    pyjs=pscript.py2js(code,inline_stdlib=genStdLibMethods) #https://pscript.readthedocs.io/en/latest/api.html
 
     return """
 var %(name)s=(function() {
@@ -257,44 +305,56 @@ var %(name)s=(function() {
     %(pyjs)s
 
     return Vue.component('%(name)s',{
-        "name": %(name)s,
-        "props": %(props)s,
-        "template": `%(template)s`,
-        "data": function() {
+        name: "%(name)s",
+        props: %(props)s,
+        template: `%(template)s`,
+        data: function() {
             var props=[]
             for(var n of %(props)s) props.push( this.$props[n] )
             var i = new %(classname)s(...props)
             return JSON.parse(JSON.stringify( i ));
         },
-        "computed": {
+        computed: {
             %(computeds)s
         },
-        "methods": {
+        methods: {
             %(methods)s
         },
-        "watch": {
+        watch: {
             %(watchs)s
         },
         %(lifecycles)s
     })
 })();
+""" % locals()
 
-    """ % locals()
 
-
-def render(filename,content=None):
+def render(*filenames):
+    """ Helpers to render VBuild's instances by providing filenames or pattern (glob's style)"""
     isPattern=lambda f: ("*" in f) or ("?" in f)
-    if content:
-        if isPattern(filename): raise VBuildException("Can't have a pattern name when content is provided !")
-        return VBuild(filename,content)
-    else:
-        files=[filename] if not isinstance(filename,list) else filename
-        files=[glob.glob(i) if isPattern(i) else [i] for i in files]
-        files=list(itertools.chain(*files))
-        return sum( [VBuild(f) for f in files] )
-            
+
+    files=[]
+    for i in filenames:
+        if isinstance(i,list):
+            files.extend(i)
+        else:
+            files.append(i)
+
+    files=[glob.glob(i) if isPattern(i) else [i] for i in files]
+    files=list(itertools.chain(*files))
+
+    ll=[]
+    for f in files:
+        try:
+            with open(f,"r+") as fid:
+                content=fid.read()
+        except IOError as e:
+            raise VBuildException(str(e))
+        ll.append( VBuild(f,content) )
+
+    return sum( ll  )
 
 
 if __name__=="__main__":
-    exec(open("./test_py_comp.py").read())
-    # exec(open("./tests.py").read())
+    # exec(open("./test_py_comp.py").read())
+    exec(open("./tests.py").read())

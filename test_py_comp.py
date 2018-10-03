@@ -1,14 +1,13 @@
-#!/usr/bin/python
-import vbuild
+#!/usr/bin/python3
+import vbuild,os
 
-c1="""
+cc="""
 <template>
     <div>
         {{name}} ({{originalName}})
-        <button @click="inc()" ref="btn1">++</button>
-        <button @click="dinc()">**</button>    
-        {{cpt}}
-        {{ccpt}} {{wcpt}}
+        <button @click="inc(3)">+3</button>
+        <button @click="inc()">+1</button>
+        {{cpt}} : {{ccpt}} {{wcpt}}
     </div>
 </template>
 <script>
@@ -18,70 +17,76 @@ class Component:
         print("DATA INIT",name)
         self.cpt=0
         self.wcpt=""
-        self.originalName=name  # copy the props.name
+        self.originalName=name                      # copy the props.name
 
-    def inc(self):
-        print("++",self.name)
-        def getv(): return 1
-        self.cpt+=getv()
-
-    def dinc(self):
-        self.inc()
-        self.inc()
+    def inc(self,nb=1):                       # async or not, it's possible
+        print("inc(%s)"%nb,self.name)
+        self.cpt+=nb
 
     def CREATED(self):
         print("CREATED",self.name)
 
     def MOUNTED(self):
         print("mounted",self.name,"in",self["$parent"]["$options"].name)
-        print(self["$parent"])
-        self.inc()
 
     def COMPUTED_ccpt(self):
+        print("COMPUTE",self.name,self.cpt,"changed")
         return self.cpt*"#"
 
     def WATCH_1(self,newVal,oldVal,name="cpt"):
         print("WATCH",self.name,name,oldVal,"-->",newVal)
         self.wcpt=self.cpt*"+"
+        
+    def WATCH_2(self,newVal,oldVal,name="name"):    # watch the prop !
+        print("WATCH",name,oldVal,"-->",newVal)
+
 </script>
 <style scoped lang="sass">
-:scope {background:#FFE;border:1px solid black;margin: $v;padding:$v;}
+:scope {background:#FFE;border:1px solid black;margin:$v;padding:$v;}
 </style>
 """
 
-cp="""
+cm="""
 <template>
     <div>
-        {{nom}} <button @click="inc()">n</button>
-        <comp :name="nom"></comp>
+        {{id}} <button @click="change()"><- change</button>
+        <comp :name="id"></comp>
         <comp name="n2"></comp>
         <comp></comp>
-
     </div>
 </template>
 <script>
 class Component:
-
     def __init__(self):
-        self.nom="nx"
-
-    def inc(self):
-        self.nom+="x"
-
+        self.id="n"
+    def change(self):
+        self.id+="x"
 </script>
+<style scoped lang="sass">
+:scope {border:2px solid green;margin:$v;padding:$v;}
+</style>
+
 """
 
 vbuild.partial="$v: 12px;"
 
-with open("aeff.html","w+") as fid:
+dest=os.path.basename(__file__)[:-3]+".html"
+
+with open(dest,"w+") as fid:
+    v=vbuild.VBuild("comp.vue",cc)+vbuild.VBuild("mother.vue",cm)
+    html=v.html
+    style=v.style
+    script=vbuild.jsmin(v.script)
+    
     fid.write("""
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-%s
+<style>%(style)s</style>
+%(html)s
+<script>%(script)s</script>
 <div id="app">
-    <maman/>
+    <mother/>
 </div>
-</script>
 <script>new Vue({el:"#app"})</script>    
-""" % (vbuild.render("comp.vue",c1)+vbuild.render("maman.vue",cp))
-    )
+""" % locals() )
 
+print("Generate html --> "+dest)
