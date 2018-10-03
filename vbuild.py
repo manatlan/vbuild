@@ -36,17 +36,22 @@ def minimize(code):
     """ JS-minimize (transpile to ES5 JS compliant) thru a online service
         (https://closure-compiler.appspot.com/compile)
     """
-    data={
-      'js_code':code,
-      'compilation_level':'SIMPLE_OPTIMIZATIONS',
-      'output_format':'json',
-      'output_info':'compiled_code',
-    }
+    data=[
+      ('js_code',code),
+      ('compilation_level','SIMPLE_OPTIMIZATIONS'),
+      ('output_format','json'),
+      ('output_info','compiled_code'),
+      ('output_info','errors'),
+    ]
     req = urlrequest.Request("https://closure-compiler.appspot.com/compile",urlparse.urlencode(data).encode("utf8"),{'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8'})
     response=urlrequest.urlopen(req)
-    buf = response.read()    
+    r = json.loads( response.read() )
     response.close()
-    return json.loads(buf)["compiledCode"]
+    code=r.get("compiledCode",None)
+    if code:
+        return code
+    else:
+        raise VBuildException("minimize error: %s" % r.get("errors",None))
 
 
 def jsmin(code): # need java & pip/closure

@@ -586,9 +586,8 @@ class TestMinimize(unittest.TestCase):
         s="""
         kk{{_=*jùhgj;://\\}$bc(.[hhh]
         """
-        x=vbuild.minimize(s)
-        self.assertEqual( x,"")
-
+        with self.assertRaises(vbuild.VBuildException): # vbuild.VBuildException: minimize error: [{'type': 'JSC_PARSE_ERROR', 'file': 'Input_0', 'lineno': 2, 'charno': 10, 'error': 'Parse error. Semi-colon expected', 'line': '        kk{{_=*jùhgj;://\\}$bc(.[hhh]'}]
+            vbuild.minimize(s)
 
     def test_min(self):
         s="""
@@ -597,6 +596,23 @@ class TestMinimize(unittest.TestCase):
         }
         """
         x=vbuild.minimize(s)
+        self.assertTrue( "$jscomp" in x)
+        
+class TestjsMin(unittest.TestCase):
+    def test_bad(self):
+        s="""
+        kk{{_=*jùhgj;://\\}$bc(.[hhh]
+        """
+        with self.assertRaises(vbuild.VBuildException): # vbuild.VBuildException: minimize error: [{'type': 'JSC_PARSE_ERROR', 'file': 'Input_0', 'lineno': 2, 'charno': 10, 'error': 'Parse error. Semi-colon expected', 'line': '        kk{{_=*jùhgj;://\\}$bc(.[hhh]'}]
+            vbuild.jsmin(s)
+
+    def test_min(self):
+        s="""
+        async function  jo(...a) {
+            var f=(...a) => {let b=`hello`}
+        }
+        """
+        x=vbuild.jsmin(s)
         self.assertTrue( "$jscomp" in x)
         
 if __name__ == '__main__':
