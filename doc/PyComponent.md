@@ -108,12 +108,12 @@ Currently, there is only 2 lifecyles : but they are the most used IRL apps (But 
 (see `def CREATED(self)` and `def MOUNTED(self)` ^^)
 
 ### Computed field
-You can create a computed attibute, by declaring a instance method prefixed with "COMPUTED_", the method should return the computed value.
+You can create a computed attibute, by declaring an instance method prefixed with "COMPUTED_", the method should return the computed value.
 
 (see `def COMPUTED_ccpt(self)` ^^)
 
 ### Watch'ers
-You can create a whatcher on a vue attribute, by declaring a instance method prefixed with "WATCH_". This method should have the signature `(self,newVal,oldVal,name="var_to_watch")`.
+You can create a whatcher on a vue attribute, by declaring an instance method prefixed with "WATCH_". This method should have the signature `(self,newVal,oldVal,name="var_to_watch")`.
 
 You should suffix your watch method, to make it unique. The name of the watch'ed attribute should be declared in the `name` argument.
 
