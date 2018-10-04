@@ -77,7 +77,7 @@ vbuild.fullPyComp=False # minimal js transpilation, but vbuild will automaticall
 vbuild.fullPyComp=None  # minimal js transpilation, but it's up to you to include the js from "pscript.get_full_std_lib()".
 ```
 
-### `props`
+### props
 The `props` are declared from the keywords of the `__init__` statement. In the upper example ; you should declare the component like this :
 
 ```html
@@ -89,7 +89,7 @@ The value of `name` will be passed when the `__init__` statement is called (note
 If `<comp></comp>` declares no name, `__init__` is called, and `name` will be `undefined`.(note that `Vue` will not create a reactive propertie (`self.name`))
 
 
-### Instanciate the `data`
+### Instanciate the data
 Like in python, the initialization of the instance is done in the `__init__()`. In this statement, just init your data. All initialized properties will be used in the `data` options of the vue component (which will make them reactives).
 
 (see `def __init__(...)` ^^)
@@ -105,17 +105,17 @@ self["$refs"].btnOk
 self["$forceUpdate"]()
 ```
 
-### Lifecycle events : `created` & `mounted`
+### Lifecycle events : created & mounted
 Currently, there is only 2 lifecyles : but they are the most used IRL apps (But it's very easy to add more, what lifecycle methods do you want to use ??). Just create an uppercase method, with the name of the lifecyle. 
 
 (see `def CREATED(self)` and `def MOUNTED(self)` ^^)
 
-### `computed` field
+### computed field
 You can create a computed attibute, by declaring a instance method prefixed with "COMPUTED_", the method should return the computed value.
 
 (see `def COMPUTED_ccpt(self)` ^^)
 
-### `watch`ers
+### watch'ers
 You can create a whatcher on a vue attributes, by declaring a instance method prefixed with "WATCH_". This method should have the signature `(self,newVal,oldVal,name="name")`.
 
 You should suffix your watch method, to make it unique. The name of the watch'ed attribute should be declared in the `name` argument.
