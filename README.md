@@ -1,19 +1,16 @@
 # vbuild
 
-"Compile" your [VueJS](https://vuejs.org/) components (*.vue) to standalone html/js/css ... python only, **no need of nodejs**.
+"Compile" your [VueJS](https://vuejs.org/) components (*.vue) to standalone html/js/css ... python only, **no need of nodejs**. And you can use [python components](https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md) in **vbuild**, in your vue/sfc !!!
 
 It's just an utility to extract HTML(template), SCRIPT and STYLE from a [VUE/SFC component]((https://fr.vuejs.org/v2/guide/single-file-components.html)) (*.vue). It won't replace webpack/nodejs/vue-cli, it fills the _"Sometimes you have to work with the tools you have, not the ones you want."_ gap.
-
-Since 0.6 release : you can use [python components](https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md) in **vbuild**, in your vue/sfc !!!
 
 [Available on pypi](https://pypi.org/project/vbuild/)
 
 ## Features
 
  * **NO node-js stack**, only pure python (py2 or py3 compliant)
- * **NEW** Ability to use [python components](https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md)
- 
- * Components can be styled with [SASS or LESS ccs-pre-processors](https://github.com/manatlan/vbuild/blob/master/doc/CssPreProcess.md) !
+ * **NEW 0.6.0** Ability to use [python components](https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md)
+  * Components can be styled with [SASS or LESS ccs-pre-processors](https://github.com/manatlan/vbuild/blob/master/doc/CssPreProcess.md) !
  * Provide a [JS-minimizer (ES5 compliant JS, via closure)](https://github.com/manatlan/vbuild/blob/master/doc/minimize.md)
  * Ability to [post process stuff](https://github.com/manatlan/vbuild/blob/master/doc/PostProcess.md), with your own processors
  * Respect [VueJs specs](https://vue-loader.vuejs.org/spec.html) (at least one template tag, many style (scoped or not) tags)
