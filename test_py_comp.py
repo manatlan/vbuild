@@ -77,7 +77,8 @@ with open(dest,"w+") as fid:
     v=vbuild.VBuild("comp.vue",cc)+vbuild.VBuild("mother.vue",cm)
     html=v.html
     style=v.style
-    script=vbuild.jsmin(v.script)
+    # script=vbuild.jsmin(v.script)
+    script=v.script
     
     fid.write("""
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
