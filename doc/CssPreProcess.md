@@ -1,8 +1,9 @@
 # Css Pre-processors
 
 **vbuild** let you use CSS Pre-Processors in your style's declarations. Currently, only two are availables, (thoses was backported to pure python) :
-    - [SASS/SCSS](https://sass-lang.com/) (new syntax only) : using `<style lang="scss"></style>` or `<style lang="sass"></style>`). You'll need to install [pyscss](https://pypi.org/project/pyScss/)
-    - [LESS](http://lesscss.org/) : using `<style lang="less"></style>`). You'll need to install [lesscpy](https://pypi.org/project/lesscpy/)
+
+- [SASS/SCSS](https://sass-lang.com/) (new syntax only) : using `<style lang="scss"></style>` or `<style lang="sass"></style>`). You'll need to install [pyscss](https://pypi.org/project/pyScss/)
+- [LESS](http://lesscss.org/) : using `<style lang="less"></style>`). You'll need to install [lesscpy](https://pypi.org/project/lesscpy/)
 
 Technically, you can merge sass and less components (but it's not a good practice !), but you can only use one partial (common declarations) for all.
 
