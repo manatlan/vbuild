@@ -9,13 +9,12 @@ Be sure to read the [pscript caveats](https://pscript.readthedocs.io/en/latest/i
 I've made a lot of trys, and this one is (IMO) the best (usefull and readable). I'm feeling more and more confortable using python component: life is better without braces ;-) (and syntaxic errors are sorted at compilation/rendering time)
 
 Here is a working component which cover all of the current/implemented features :
-
-    * `props`
-    * Instanciate the `data`
-    * Access to $attributes (works with $store/[vuex](https://vuex.vuejs.org/))
-    * Lifecycle events: `created` & `mounted`
-    * `computed` field
-    * `watch`ers
+- `props`
+- Instanciate the `data`
+- Access to $attributes (works with $store/[vuex](https://vuex.vuejs.org/))
+- Lifecycle events: `created` & `mounted`
+- `computed` field
+- `watch`ers
     
 ```html
 <template>
