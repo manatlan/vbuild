@@ -1,6 +1,6 @@
 # vbuild
 
-"Compile" your [VueJS](https://vuejs.org/) components (*.vue) to standalone html/js/css ... python only, **no need of nodejs**. And you can use [python components](https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md) in **vbuild**, in your vue/sfc !!!
+"Compile" your [VueJS](https://vuejs.org/) components (*.vue) to standalone html/js/css ... python only, **no need of nodejs**. And you can use [python components](https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md) with **vbuild**, in your vue/sfc files !!!
 
 It's just an utility to extract HTML(template), SCRIPT and STYLE from a [VUE/SFC component]((https://fr.vuejs.org/v2/guide/single-file-components.html)) (*.vue). It won't replace webpack/nodejs/vue-cli, it fills the _"Sometimes you have to work with the tools you have, not the ones you want."_ gap.
 
