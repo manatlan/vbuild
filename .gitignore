@@ -3,6 +3,7 @@ __pycache__/
 vues/
 *.py[cod]
 *$py.class
+*.html
 
 # C extensions
 *.so

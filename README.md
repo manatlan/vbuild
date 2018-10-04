@@ -8,10 +8,10 @@ It's just an utility to extract HTML(template), SCRIPT and STYLE from a [VUE/SFC
 
 ## Features
 
- * **NO node-js stack**, only pure python (py2 or py3)
- * **NEW** Ability to use [python component](doc/PyComponent.md)
+ * **NO node-js stack**, only pure python (py2 or py3 compliant)
+ * **NEW** Ability to use [python components](doc/PyComponent.md)
  * Components can be styled with [SASS or LESS ccs-pre-processors](doc/CssPreProcess.md) !
- * Provide a [JS-minimizer (ES5 compliant JS)](doc/minimize.md)
+ * Provide a [JS-minimizer (ES5 compliant JS, via closure)](doc/minimize.md)
  * Ability to [post process stuff](doc/PostProcess.md), with your own processors
  * Respect [VueJs specs](https://vue-loader.vuejs.org/spec.html) (at least one template tag, many style (scoped or not) tags)
  * `templates` are converted to a `<script type="text/x-template" id="XXX"></script>` (not converted to JS)
@@ -52,6 +52,8 @@ writeYourTemplate("index.html",buf)
 
 ## A python component
 
+Here is a simple example : a "named counter" (with a button to add +1 to the counter):
+
 ```html
 <template>
     <div>
@@ -78,5 +80,7 @@ If this file is named `cpt.vue` ; you can use it with `<cpt name="c"></cpt>`.
 ## TODO
 
  * more utilities
+ * more rock solid version
  * and docs !
+ * see the [TODO list for python components too]((doc/PyComponent.md))
 

@@ -17,9 +17,9 @@ class Component:
         print("DATA INIT",name)
         self.cpt=0
         self.wcpt=""
-        self.originalName=name                      # copy the props.name
+        self.originalName=name                      # copy the $props.name
 
-    def inc(self,nb=1):                       # async or not, it's possible
+    def inc(self,nb=1):                             # with py3, you can make this a async method !
         print("inc(%s)"%nb,self.name)
         self.cpt+=nb
 
@@ -69,6 +69,7 @@ class Component:
 """
 
 vbuild.partial="$v: 12px;"
+#~ vbuild.fullPyComp=False
 
 dest=os.path.basename(__file__)[:-3]+".html"
 

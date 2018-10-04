@@ -2,9 +2,8 @@
 # -*- coding: utf-8 -*-
 import vbuild,sys,os
 import unittest
-import pkgutil 
 
-class TestVuePArser(unittest.TestCase):
+class TestVueParser(unittest.TestCase):
 
     def test_1(self):
         h="""<template><div>XXX</div></template>"""
@@ -336,70 +335,67 @@ export default {
         self.assertEqual(r.script,"""var name = Vue.component('name', {template:'#tpl-name',\n    mounted() {}\n});""")
 
     def test_sass(self):    
-        if pkgutil.find_loader("scss"):
-            h="""<template><div>XXX</div></template>
-            <Style scoped lang="sass">
-            body {
-                font: 2px *3;
-                color: red + green;
-            }
-            </style>"""
-            r=vbuild.VBuild("comp.vue",h)
-            self.assertTrue("6px" in r.style)
-            self.assertTrue("#ff8000" in r.style)
-            
-            h="""<template><div>XXX</div></template>
-            <Style scoped lang="sass">
-            body {
-                font: $unknown;
-            }
-            </style>"""
-            with self.assertRaises(vbuild.VBuildException):     # vbuild.VBuildException: Component 'comp.vue' got a CSS-PreProcessor trouble : Error evaluating expression:
-                vbuild.VBuild("comp.vue",h)
+        if not vbuild.hasSass: self.skipTest("Don't test sass (miss pyScss)")
 
-        else:
-            print("can't test sass")
+        h="""<template><div>XXX</div></template>
+        <Style scoped lang="sass">
+        body {
+            font: 2px *3;
+            color: red + green;
+        }
+        </style>"""
+        r=vbuild.VBuild("comp.vue",h)
+        self.assertTrue("6px" in r.style)
+        self.assertTrue("#ff8000" in r.style)
+        
+        h="""<template><div>XXX</div></template>
+        <Style scoped lang="sass">
+        body {
+            font: $unknown;
+        }
+        </style>"""
+        with self.assertRaises(vbuild.VBuildException):     # vbuild.VBuildException: Component 'comp.vue' got a CSS-PreProcessor trouble : Error evaluating expression:
+            vbuild.VBuild("comp.vue",h)
+
 
     def test_less(self):   
-        if pkgutil.find_loader("lesscpy"):
-            h="""<template><div>XXX</div></template>
-            <Style scoped Lang = "leSS" >
-            body {
-                border-width: 2px *3;
-            }
-            </style>"""
-            r=vbuild.VBuild("comp.vue",h)
-            self.assertTrue("6px" in r.style)
-            
-            h="""<template><div>XXX</div></template>
-            <Style scoped lang="less">
-            body {
-                font: @unknown;
-            }
-            </style>"""
-            with self.assertRaises(vbuild.VBuildException):     # vbuild.VBuildException: Component 'comp.vue' got a CSS-PreProcessor trouble : Error evaluating expression:
-                vbuild.VBuild("comp.vue",h)            
-        else:
-            print("can't test less")
+        if not vbuild.hasLess: self.skipTest("Cant test Less (instal lesscpy)")
+        
+        h="""<template><div>XXX</div></template>
+        <Style scoped Lang = "leSS" >
+        body {
+            border-width: 2px *3;
+        }
+        </style>"""
+        r=vbuild.VBuild("comp.vue",h)
+        self.assertTrue("6px" in r.style)
+        
+        h="""<template><div>XXX</div></template>
+        <Style scoped lang="less">
+        body {
+            font: @unknown;
+        }
+        </style>"""
+        with self.assertRaises(vbuild.VBuildException):     # vbuild.VBuildException: Component 'comp.vue' got a CSS-PreProcessor trouble : Error evaluating expression:
+            vbuild.VBuild("comp.vue",h)            
 
 
 class TestRenderFiles(unittest.TestCase):
     def testfiles(self):
-        if os.path.isdir("vues"):
-            import glob
-            for i in glob.glob("vues/*.vue"):
-                r=vbuild.render(i)
-                self.assertTrue(str(r))
+        if not os.path.isdir("vues"): self.skipTest("Don't test real vue files (you haven't a vues folder with .vue files)")
+        
+        import glob
+        for i in glob.glob("vues/*.vue"):
+            r=vbuild.render(i)
+            self.assertTrue(str(r))
 
-            self.assertTrue(str(vbuild.render( "vues/list.vue")))
-            self.assertTrue(str(vbuild.render( "vues/*.vue")))
-            self.assertTrue(str(vbuild.render( "*/*.vue")))
-            self.assertTrue(str(vbuild.render( "vues/req.vue", "vues/todo.vue" )))
-            self.assertTrue(str(vbuild.render( ["vues/req.vue","vues/todo.vue"] )))
-            self.assertTrue(str(vbuild.render( glob.glob("vues/*.vue"))))
+        self.assertTrue(str(vbuild.render( "vues/list.vue")))
+        self.assertTrue(str(vbuild.render( "vues/*.vue")))
+        self.assertTrue(str(vbuild.render( "*/*.vue")))
+        self.assertTrue(str(vbuild.render( "vues/req.vue", "vues/todo.vue" )))
+        self.assertTrue(str(vbuild.render( ["vues/req.vue","vues/todo.vue"] )))
+        self.assertTrue(str(vbuild.render( glob.glob("vues/*.vue"))))
 
-        else:
-            print("***WARNING*** : Don't test real vue files (you haven't a vues folder with .vue files)")
 
     def test_bad_file(self):
         with self.assertRaises(vbuild.VBuildException):
@@ -517,7 +513,7 @@ class TestPy2Js(unittest.TestCase):
 
     def test_WATCH(self):
         c="""class Component:
-  def WATCH_var(self,old,new,name="$store.state.yo"):
+  def WATCH_var(self,oldVal,newVal,name="$store.state.yo"):
     pass"""
         js=vbuild.mkPythonVueComponent("toto","<div></div>",c)
         self.assertTrue("_pyfunc_op_instantiate" in js)
@@ -527,6 +523,12 @@ class TestPy2Js(unittest.TestCase):
     def test_WATCH_ko(self):
         c="""class Component:
   def WATCH_var(self):
+    pass"""
+        with self.assertRaises(vbuild.VBuildException): # vbuild.VBuildException: name='var_to_watch' is not specified in WATCH_var
+            vbuild.mkPythonVueComponent("toto","<div></div>",c)
+
+        c="""class Component:
+  def WATCH_var(self,oldVal,newVal,name):
     pass"""
         with self.assertRaises(vbuild.VBuildException): # vbuild.VBuildException: name='var_to_watch' is not specified in WATCH_var
             vbuild.mkPythonVueComponent("toto","<div></div>",c)
@@ -541,7 +543,7 @@ class TestPy2Js(unittest.TestCase):
         js=vbuild.mkPythonVueComponent("toto","<div></div>",c)
         self.assertTrue("_pyfunc_op_instantiate" in js)
         self.assertTrue("Vue.component(" in js)
-        self.assertTrue('''props: ['prop1', 'prop2'],''' in js)
+        self.assertTrue("props: ['prop1', 'prop2']," in js)
         self.assertTrue("for(var n of ['prop1', 'prop2']) props.push( this.$props[n] )" in js)
         jsinit="""C.prototype.__init__ = function (prop1, prop2) {
     prop1 = (prop1 === undefined) ? "?": prop1;
@@ -561,8 +563,8 @@ class TestPy2Js(unittest.TestCase):
         js=vbuild.mkPythonVueComponent("toto","<div></div>",c)
         self.assertTrue("_pyfunc_op_instantiate" in js)
         self.assertTrue("Vue.component(" in js)
-        self.assertTrue('''method1: C.prototype.method1,''' in js)
-        self.assertTrue('''this["$parent"].nb = nb;''' in js)
+        self.assertTrue("method1: C.prototype.method1," in js)
+        self.assertTrue('this["$parent"].nb = nb;' in js)
 
 class TestTrans(unittest.TestCase):
     def test_1(self):
@@ -581,32 +583,19 @@ class TestTrans(unittest.TestCase):
         vbuild.transHtml=lambda x: x
     
 
-class TestMinimize(unittest.TestCase):
-    def test_bad(self):
-        s="""
-        kk{{_=*jùhgj;://\\}$bc(.[hhh]
-        """
-        with self.assertRaises(vbuild.VBuildException): # vbuild.VBuildException: minimize error: [{'type': 'JSC_PARSE_ERROR', 'file': 'Input_0', 'lineno': 2, 'charno': 10, 'error': 'Parse error. Semi-colon expected', 'line': '        kk{{_=*jùhgj;://\\}$bc(.[hhh]'}]
-            vbuild.minimize(s)
-
-    def test_min(self):
-        s="""
-        async function  jo(...a) {
-            var f=(...a) => {let b=`hello`}
-        }
-        """
-        x=vbuild.minimize(s)
-        self.assertTrue( "$jscomp" in x)
-        
 class TestjsMin(unittest.TestCase):
     def test_bad(self):
+        if not vbuild.hasClosure: self.skipTest("Don't test local jsmin (miss closure)")
+        
         s="""
-        kk{{_=*jùhgj;://\\}$bc(.[hhh]
+        kk{{_=*juhgj;://\\}$bc(.[hhh]
         """
         with self.assertRaises(vbuild.VBuildException): # vbuild.VBuildException: minimize error: [{'type': 'JSC_PARSE_ERROR', 'file': 'Input_0', 'lineno': 2, 'charno': 10, 'error': 'Parse error. Semi-colon expected', 'line': '        kk{{_=*jùhgj;://\\}$bc(.[hhh]'}]
             vbuild.jsmin(s)
 
     def test_min(self):
+        if not vbuild.hasClosure: self.skipTest("Don't test local jsmin (miss closure)")
+
         s="""
         async function  jo(...a) {
             var f=(...a) => {let b=`hello`}
@@ -614,6 +603,81 @@ class TestjsMin(unittest.TestCase):
         """
         x=vbuild.jsmin(s)
         self.assertTrue( "$jscomp" in x)
+
+class TestPyStdLibIncludeOrNot(unittest.TestCase):
+    cj="""<template><div>yo</div></template>"""
+    cp="""<template><div>yo</div></template><script>class Component: pass</script>"""
+    
+    def setUp(self):
+        self.default=vbuild.fullPyComp
         
+    def tearDown(self):
+        vbuild.fullPyComp=self.default # reset to default
+    
+    def isPythonComp(self,r):
+        return "_pyfunc_op_instantiate(" in r.script
+    
+    def nbPythonLibIncluded(self,r):
+        return r.script.count("var _pyfunc_op_instantiate")
+    
+    def test_base(self):
+        r=vbuild.VBuild("c.vue",self.cj)
+        self.assertFalse(self.isPythonComp(r))  # comp is js
+        
+        r=vbuild.VBuild("c.vue",self.cp)
+        self.assertTrue(self.isPythonComp(r))   # comp is py
+
+    def test_fullPyComp_Default(self):
+        r=vbuild.VBuild("c.vue",self.cj)
+        self.assertEqual(self.nbPythonLibIncluded(r),0)    # no py no lib
+        r+=vbuild.VBuild("c1.vue",self.cp)
+        r+=vbuild.VBuild("c2.vue",self.cp)
+        self.assertTrue(self.isPythonComp(r))
+        self.assertEqual(self.nbPythonLibIncluded(r),2)    # each comp got its own std methods
+
+    def test_fullPyComp_False(self):
+        vbuild.fullPyComp=False
+        r=vbuild.VBuild("c.vue",self.cj)
+        self.assertEqual(self.nbPythonLibIncluded(r),0)    # no py no lib
+        r+=vbuild.VBuild("c1.vue",self.cp)
+        r+=vbuild.VBuild("c2.vue",self.cp)
+        self.assertTrue(self.isPythonComp(r))
+        self.assertEqual(self.nbPythonLibIncluded(r),1)    # the full std lib is included
+        
+    def test_fullPyComp_True(self):
+        vbuild.fullPyComp=True
+        r=vbuild.VBuild("c.vue",self.cj)
+        self.assertEqual(self.nbPythonLibIncluded(r),0)    # no py no lib
+        r+=vbuild.VBuild("c1.vue",self.cp)
+        r+=vbuild.VBuild("c2.vue",self.cp)
+        self.assertTrue(self.isPythonComp(r))
+        self.assertEqual(self.nbPythonLibIncluded(r),2)    # each comp got its own std methods
+
+    def test_fullPyComp_None(self):
+        vbuild.fullPyComp=None
+        r=vbuild.VBuild("c.vue",self.cj)
+        self.assertEqual(self.nbPythonLibIncluded(r),0)    # no py no lib
+        r+=vbuild.VBuild("c1.vue",self.cp)
+        r+=vbuild.VBuild("c2.vue",self.cp)
+        self.assertTrue(self.isPythonComp(r))
+        self.assertEqual(self.nbPythonLibIncluded(r),0)    # nothing is included, it's up to you
+
+#~ class TestJSminOnline(unittest.TestCase):
+    #~ def test_bad(self):
+        #~ s="""
+        #~ kk{{_=*jùhgj;://\\}$bc(.[hhh]
+        #~ """
+        #~ with self.assertRaises(vbuild.VBuildException): # vbuild.VBuildException: minimize error: [{'type': 'JSC_PARSE_ERROR', 'file': 'Input_0', 'lineno': 2, 'charno': 10, 'error': 'Parse error. Semi-colon expected', 'line': '        kk{{_=*jùhgj;://\\}$bc(.[hhh]'}]
+            #~ vbuild.jsminOnline(s)
+
+    #~ def test_min(self):
+        #~ s="""
+        #~ async function  jo(...a) {
+            #~ var f=(...a) => {let b=`hello`}
+        #~ }
+        #~ """
+        #~ x=vbuild.jsminOnline(s)
+        #~ self.assertTrue( "$jscomp" in x)
+
 if __name__ == '__main__':
     unittest.main()

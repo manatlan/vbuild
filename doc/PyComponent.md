@@ -35,7 +35,7 @@ class Component:
         self.wcpt=""
         self.originalName=name  # copy the $props.name
 
-    def inc(self,nb=1):
+    def inc(self,nb=1):                 # with py3, you can make this a async method !
         print("inc(%s)"%nb,self.name)
         self.cpt+=nb
 
@@ -65,6 +65,17 @@ With py3 : you can use async/await things in python methods (not in py2 !)
 ## Features in details
 
 By convention : lowercase methods are classic python methods, uppercase methods are special Vue's [options](https://vuejs.org/v2/api/#Options-Data).
+
+**pscript** needs to generate js wrapper to python functions : it's called the standard lib.
+You can choose to let **vbuild** generate the pscript standard lib on the fly for each component, or generate one standard lib for all, depending on your needs. (It could save bandswidth, if you have a lot of Python Components, to opt for the second option)
+
+Just set `vbuild.fullPyComp` (boolean, 3 states), before `vbuild.render`'ing :
+
+```python
+vbuild.fullPyComp=True  # (default) each components generate its needs.
+vbuild.fullPyComp=False # minimal js transpilation, but vbuild will automatically include the "js standard lib" for you.
+vbuild.fullPyComp=None  # minimal js transpilation, but it's up to you to include the js from "pscript.get_full_std_lib()".
+```
 
 ### `props`
 The `props` are declared from the keywords of the `__init__` statement. In the upper example ; you should declare the component like this :
@@ -121,4 +132,5 @@ def WATCH_2(self, newVal, oldVal, name="$store.state.mylist"): pass
 
  * add more lifecycle events
  * ability to import things ?
- * $store/vuex in python ?    
+ * use wrapper self._parent -> self["$parent"] ?
+ * $store/vuex in python ? ($router/vue-router in python ?)   

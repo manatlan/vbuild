@@ -9,7 +9,7 @@
 # #############################################################################
 __version__="0.5.0+"   #py2.7 & py3.5 !!!!
 
-import re,os,json,glob,itertools,traceback,pscript,subprocess
+import re,os,json,glob,itertools,traceback,pscript,subprocess,pkgutil
 
 try:
     from HTMLParser import HTMLParser
@@ -25,14 +25,27 @@ transStyle = lambda x:x
 transScript = lambda x:x
 
 partial=""
-usePyStdLib=False   # False : each component generate its needs.
-                    # True  : each component use minimal js, but you'll need to add "pscript.get_full_std_lib()" to the scripts
+fullPyComp=True   # 3 states ;-)
+                        # None  : minimal py comp, it's up to u to include "pscript.get_full_std_lib()"
+                        # False : minimal py comp, vbuild will include the std lib
+                        # True  : each component generate its needs (default)
+
+hasLess=bool(pkgutil.find_loader("lesscpy"))
+hasSass=bool(pkgutil.find_loader("scss"))
+hasClosure=bool(pkgutil.find_loader("closure"))
 
 
 class VBuildException(Exception): pass
 
 
 def minimize(code):
+    if hasClosure:
+        return jsmin(code)
+    else:
+        return jsminOnline(code)
+
+
+def jsminOnline(code):
     """ JS-minimize (transpile to ES5 JS compliant) thru a online service
         (https://closure-compiler.appspot.com/compile)
     """
@@ -43,26 +56,27 @@ def minimize(code):
       ('output_info','compiled_code'),
       ('output_info','errors'),
     ]
-    req = urlrequest.Request("https://closure-compiler.appspot.com/compile",urlparse.urlencode(data).encode("utf8"),{'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8'})
-    response=urlrequest.urlopen(req)
-    r = json.loads( response.read() )
-    response.close()
-    code=r.get("compiledCode",None)
+    try:
+        req = urlrequest.Request("https://closure-compiler.appspot.com/compile",urlparse.urlencode(data).encode("utf8"),{'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8'})
+        response=urlrequest.urlopen(req)
+        r = json.loads( response.read() )
+        response.close()
+        code=r.get("compiledCode",None)
+    except Exception as e:
+        raise VBuildException("minimize error: %s" % e)
     if code:
         return code
     else:
         raise VBuildException("minimize error: %s" % r.get("errors",None))
 
-
 def jsmin(code): # need java & pip/closure
     """ JS-minimize (transpile to ES5 JS compliant) with closure-compiler
         (pip package 'closure', need java !)
     """
-    try:
+    if hasClosure:
         import closure  # py2 or py3
-    except ImportError:
-        print("***WARNING*** : miss 'closure' package : sudo pip install closure")
-        return code
+    else:
+        raise VBuildException("jsmin error: closure is not installed (sudo pip closure)")
     cmd = ["java", "-jar", closure.get_jar_filename()] 
     try:
         p = subprocess.Popen(cmd,stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -80,18 +94,17 @@ def preProcessCSS(css,partial=""):
         return the css pre-processed
     """
     if css.type in ["scss","sass"]:
-        try:
+        if hasSass:
             from scss.compiler import compile_string   #lang="scss" 
             return compile_string(partial+"\n"+css) 
-        except ImportError:
+        else:
             print("***WARNING*** : miss 'sass' preprocessor : sudo pip install pyscss")
             return css
     elif css.type in ["less"]:
-        try:
-            import lesscpy
-            from six import StringIO  
-            return lesscpy.compile( StringIO(partial+"\n"+css) , minify=True)
-        except ImportError:
+        if hasLess:
+            import lesscpy,six
+            return lesscpy.compile( six.StringIO(partial+"\n"+css) , minify=True)
+        else:
             print("***WARNING*** : miss 'less' preprocessor : sudo pip install lesscpy")
             return css
     else:
@@ -214,7 +227,7 @@ class VBuild:
             if vp.script and "class Component:" in vp.script:
                 ######################################################### python
                 try:
-                    self.script=mkPythonVueComponent(name,'#'+tplId,vp.script, not usePyStdLib)
+                    self._script=mkPythonVueComponent(name,'#'+tplId,vp.script, fullPyComp)
                 except Exception as e:
                     raise VBuildException("Python Component '%s' is broken : %s" % (filename,traceback.format_exc()))
             else:
@@ -229,17 +242,27 @@ class VBuild:
                 else:
                     js="{}"
                 
-                self.script="""var %s = Vue.component('%s', %s);""" % (name,name,js.replace("{","{template:'#%s'," % tplId,1))
+                self._script="""var %s = Vue.component('%s', %s);""" % (name,name,js.replace("{","{template:'#%s'," % tplId,1))
 
-            self.script=transScript(self.script)
+            self._script=transScript(self._script)
             self.style=transStyle(self.style)
 
+    @property
+    def script(self):
+        isPyComp="_pyfunc_op_instantiate(" in self._script  # in fact : contains
+        isLibInside="var _pyfunc_op_instantiate" in self._script
+
+        if (fullPyComp is False) and isPyComp and not isLibInside:
+            return pscript.get_full_std_lib()+"\n"+self._script
+        else:
+            return self._script
+        
     def __add__(self,o):
         join=lambda *l: ("\n".join(l)).strip("\n")
         same=set(self.tags).intersection(set(o.tags))
         if same: raise VBuildException("You can't have multiple '%s'" % list(same)[0])
         self.html=join(self.html,o.html)
-        self.script=join(self.script,o.script)
+        self._script=join(self._script,o._script)
         self.style=join(self.style,o.style)
         self.tags.extend(o.tags)
         return self
@@ -361,5 +384,8 @@ def render(*filenames):
 
 
 if __name__=="__main__":
-    # exec(open("./test_py_comp.py").read())
+    print("Less installed (lesscpy)    :",hasLess)
+    print("Sass installed (pyScss)     :",hasSass)
+    print("Closure installed (closure) :",hasClosure)
+    exec(open("./test_py_comp.py").read())
     exec(open("./tests.py").read())
