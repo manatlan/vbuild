@@ -36,7 +36,6 @@ class TestVueParser(unittest.TestCase):
         self.assertEqual(r.scopedStyles,[])
         self.assertTrue(r.rootTag is None)
         
-
     def test_more_than_one_template(self):
         h="""<template><div>jo</div></template><template><div>jo</div></template>"""
         with self.assertRaises(vbuild.VBuildException):
