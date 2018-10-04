@@ -7,8 +7,8 @@ Its signature is :
 `vbuild.minimize( jsScript) -> jsScript`
 
 But you can use too :
-    - `vbuild.jsmin( jsScript) -> jsScript` : for the local version (which use closure)
-    - `vbuild.jsminOnline( jsScript) -> jsScript` : for the online version
+- `vbuild.jsmin( jsScript) -> jsScript` : for the local version (which use closure)
+- `vbuild.jsminOnline( jsScript) -> jsScript` : for the online version
 
 `vbuild.minimize()` is just a wrapper around thoses functions.
 
