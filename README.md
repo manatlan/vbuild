@@ -91,5 +91,6 @@ All theses libs works with py2 and/or py3, and you could use the [ccs-pre-proces
  * more utilities
  * more rock solid version
  * and docs !
+ * add pyscss lesscpy closure to pip setup.py (optionnal's modules)
  * see the [TODO list for python components too]((https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md))
 
