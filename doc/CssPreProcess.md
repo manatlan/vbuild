@@ -7,7 +7,7 @@
 
 Technically, you can merge sass and less components (but it's not a good practice !), but you can only use one partial (common declarations) for all.
 
-If you need to use your own css processor, you can override the transform method [vbuild.transStyle](PostProcess.md) !
+If you need to use your own css processor, you can override the transform method [vbuild.transStyle](https://github.com/manatlan/vbuild/blob/master/doc/PostProcess.md) !
 
 ## Example using SASS
 ```html
