@@ -25,6 +25,7 @@ class Component:
     </div>
 </template>
 <script>
+    
 export default {
   props: ["name"],
   data: function() {
@@ -36,6 +37,7 @@ export default {
     }
   }
 }
+    
 </script>
 <style scoped>
 :scope {background:yellow}
