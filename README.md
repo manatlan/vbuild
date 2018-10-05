@@ -50,31 +50,13 @@ writeYourTemplate("index.html",buf)
 ([a real example](https://github.com/manatlan/wuy/tree/master/examples/vueapp) of rendering vue/sfc components, using **vbuild** and the marvelous [wuy](https://github.com/manatlan/wuy))
 
 
-## A python component
+## Vue/sfc component compatibility
 
-Here is a simple example : a "named counter" (with a button to add +1 to the counter):
+All classical JS vue/sfc components are compatibles. But now, you can create [python component](https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md) too. 
 
-```html
-<template>
-    <div>
-        {{name}} : {{cpt}} <button @click="inc()">+1</button>
-    </div>
-</template>
-<script lang="python">
+Here is, side by side, the same component (in js, and in python):
 
-class Component:
-    def __init__(self, name):   # name is a props !
-        self.cpt=0
-    def inc(self):
-        self.cpt+=1
-
-</script>
-<style scoped>
-:scope {background:yellow}
-</style>
-```
-
-If this file is named `cpt.vue` ; you can use it with `<cpt name="c"></cpt>`.
+<image src="https://raw.githubusercontent.com/manatlan/vbuild/master/doc/vs.png"/>
 
 ## To use the full features of vbuild
 
@@ -92,5 +74,5 @@ All theses libs works with py2 and/or py3, and you could use the [ccs-pre-proces
  * more rock solid version
  * and docs !
  * add pyscss lesscpy closure to pip setup.py (optionnal's modules)
- * see the [TODO list for python components too]((https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md))
+ * see the [TODO list for python components too](https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md)
 
