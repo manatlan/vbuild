@@ -52,7 +52,7 @@ writeYourTemplate("index.html",buf)
 
 ## Vue/sfc component compatibility
 
-All classical JS vue/sfc components are compatibles. But now, you can create [python component](https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md) too. 
+All classical JS vue/sfc components are compatibles. But now, you can use [python component](https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md) too. 
 
 Here is, side by side, the same component (in js, and in python):
 
