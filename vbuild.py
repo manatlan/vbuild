@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python2
 # -*- coding: utf-8 -*-
 # #############################################################################
 #    Copyright (C) 2018 manatlan manatlan[at]gmail(dot)com
@@ -7,7 +7,7 @@
 #
 # https://github.com/manatlan/vbuild
 # #############################################################################
-__version__="0.6.0"   #py2.7 & py3.5 !!!!
+__version__="0.6.1"   #py2.7 & py3.5 !!!!
 
 import re,os,json,glob,itertools,traceback,pscript,subprocess,pkgutil
 
@@ -124,6 +124,7 @@ class VueParser(HTMLParser):
         """ Extract stuff from the vue/buffer 'buf'
             (name is just useful for naming the component in exceptions)
         """
+        if type(buf)!=str: buf=buf.encode("utf8")
         HTMLParser.__init__(self)
         self.name=name
         self._p1=None
@@ -389,3 +390,4 @@ if __name__=="__main__":
     print("Closure installed (closure) :",hasClosure)
     exec(open("./test_py_comp.py").read())
     exec(open("./tests.py").read())
+

@@ -3,6 +3,22 @@
 import vbuild,sys,os
 import unittest
 
+class TestVueParserEncoding(unittest.TestCase):
+
+    def test_unicode(self):
+        t=u"""<template><div>
+            <a title='España'><span class="flags es"></span></a>
+            <a title='中国'><span class="flags cn"></span></a>
+        </div></template>"""
+        r=vbuild.VueParser(t)
+
+    def test_str(self):
+        t="""<template><div>
+            <a title='España'><span class="flags es"></span></a>
+            <a title='中国'><span class="flags cn"></span></a>
+        </div></template>"""
+        r=vbuild.VueParser(t)
+
 class TestVueParser(unittest.TestCase):
 
     def test_1(self):
