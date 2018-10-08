@@ -7,7 +7,7 @@
 #
 # https://github.com/manatlan/vbuild
 # #############################################################################
-__version__="0.6.1"   #py2.7 & py3.5 !!!!
+__version__="0.6.2"   #py2.7 & py3.5 !!!!
 
 import re,os,json,glob,itertools,traceback,pscript,subprocess,pkgutil
 
@@ -34,16 +34,13 @@ hasLess=bool(pkgutil.find_loader("lesscpy"))
 hasSass=bool(pkgutil.find_loader("scss"))
 hasClosure=bool(pkgutil.find_loader("closure"))
 
-
 class VBuildException(Exception): pass
-
 
 def minimize(code):
     if hasClosure:
         return jsmin(code)
     else:
         return jsminOnline(code)
-
 
 def jsminOnline(code):
     """ JS-minimize (transpile to ES5 JS compliant) thru a online service
@@ -88,43 +85,42 @@ def jsmin(code): # need java & pip/closure
     else:
         raise VBuildException("jsmin error:"+err.decode("utf8"))
 
-
-def preProcessCSS(css,partial=""):
+def preProcessCSS(cnt,partial=""):
     """ Apply css-preprocessing on css rules (according css.type) using a partial or not
         return the css pre-processed
     """
-    if css.type in ["scss","sass"]:
+    if cnt.type in ["scss","sass"]:
         if hasSass:
             from scss.compiler import compile_string   #lang="scss" 
-            return compile_string(partial+"\n"+css) 
+            return compile_string(partial+"\n"+cnt.value) 
         else:
             print("***WARNING*** : miss 'sass' preprocessor : sudo pip install pyscss")
-            return css
-    elif css.type in ["less"]:
+            return cnt.value
+    elif cnt.type in ["less"]:
         if hasLess:
             import lesscpy,six
-            return lesscpy.compile( six.StringIO(partial+"\n"+css) , minify=True)
+            return lesscpy.compile( six.StringIO(partial+"\n"+cnt.value) , minify=True)
         else:
             print("***WARNING*** : miss 'less' preprocessor : sudo pip install lesscpy")
-            return css
+            return cnt.value
     else:
-        return css
+        return cnt.value
 
-class Content(str):
-    """ A class to create a string with a property 'type' """
-    def __new__(cls, v, type=None):
-        s= str.__new__(cls, v and v.strip("\n\r\t "))
-        s.type=type
-        return s
+class Content:
+    def __init__(self,v,typ=None):
+        self.type=typ
+        self.value=v.strip("\n\r\t ")
+    def __repr__(self):
+        return self.value
 
 class VueParser(HTMLParser):
-    """ Just a class to extract <template/><script/><style/> from a buffer
+    """ Just a class to extract <template/><script/><style/> from a buffer.
+        self.html/script/styles/scopedStyles are Content's object, or list of. 
     """
     def __init__(self,buf,name=""):
         """ Extract stuff from the vue/buffer 'buf'
             (name is just useful for naming the component in exceptions)
         """
-        if type(buf)!=str: buf=buf.encode("utf8")
         HTMLParser.__init__(self)
         self.name=name
         self._p1=None
@@ -184,7 +180,6 @@ def mkPrefixCss(css,prefix=""):
         lines.append( ", ".join(l) +" {"+decs )
     return "\n".join(lines).strip("\n ")
 
-
 class VBuild:
     """ the main class, provide an instance :
 
@@ -196,9 +191,14 @@ class VBuild:
     def __init__(self,filename,content):
         """ Create a VBuild class, by providing a :
                 filename: which will be used to name the component, and create the namespace for the template
-                content: the strig buffer which contains the sfc/vue component
-        
+                content: the string buffer which contains the sfc/vue component
         """
+        if type(content)!=type(filename):           # only py2, transform 
+            if type(content)==unicode:              # filename to the same type
+                filename=filename.decode("utf8")    # of content to avoid
+            else:                                   # troubles with implicit 
+                filename=filename.encode("utf8")    # ascii conversions (regex)
+
         name=os.path.basename(filename)[:-4]
         unique = filename[:-4].replace("/","-").replace("\\","-").replace(":","-")
         # unique = name+"-"+''.join(random.choice(string.letters + string.digits) for _ in range(8))
@@ -209,11 +209,12 @@ class VBuild:
         if vp.html is None:
             raise VBuildException("Component %s doesn't have a template" % filename)
         else:
-            html=re.sub(r'^<([\w-]+)',r"<\1 "+dataId,vp.html)
+            html=re.sub(r'^<([\w-]+)',r"<\1 %s"%dataId,vp.html.value)
 
+            self.tags=[name]
             self.html="""<script type="text/x-template" id="%s">%s</script>""" % (tplId, transHtml(html) )
-            self.style=""
             
+            self.style=""
             try:
                 for style in vp.styles:
                     self.style+=mkPrefixCss( preProcessCSS(style,partial) )+"\n"
@@ -222,22 +223,20 @@ class VBuild:
             except Exception as e:
                 raise VBuildException("Component '%s' got a CSS-PreProcessor trouble : %s" % (filename,e))
                 
-
-            self.tags=[name]
-
-            if vp.script and "class Component:" in vp.script:
+            # and set self._script !
+            if vp.script and "class Component:" in vp.script.value:
                 ######################################################### python
                 try:
-                    self._script=mkPythonVueComponent(name,'#'+tplId,vp.script, fullPyComp)
+                    self._script=mkPythonVueComponent(name,'#'+tplId,vp.script.value, fullPyComp)
                 except Exception as e:
                     raise VBuildException("Python Component '%s' is broken : %s" % (filename,traceback.format_exc()))
             else:
                 ######################################################### js
                 if vp.script:
-                    p1=vp.script.find("{")
-                    p2=vp.script.rfind("}")
+                    p1=vp.script.value.find("{")
+                    p2=vp.script.value.rfind("}")
                     if 0 <= p1 <= p2:
-                        js= vp.script[p1:p2+1]
+                        js= vp.script.value[p1:p2+1]
                     else:
                         raise VBuildException("Component %s contains a bad script" % filename)                    
                 else:
@@ -357,7 +356,6 @@ var %(name)s=(function() {
 })();
 """ % locals()
 
-
 def render(*filenames):
     """ Helpers to render VBuild's instances by providing filenames or pattern (glob's style)"""
     isPattern=lambda f: ("*" in f) or ("?" in f)
@@ -383,11 +381,10 @@ def render(*filenames):
 
     return sum( ll  )
 
-
 if __name__=="__main__":
     print("Less installed (lesscpy)    :",hasLess)
     print("Sass installed (pyScss)     :",hasSass)
     print("Closure installed (closure) :",hasClosure)
-    exec(open("./test_py_comp.py").read())
-    exec(open("./tests.py").read())
+    if(os.path.isfile("tests.py")): exec(open("tests.py").read())
+    #~ if(os.path.isfile("test_py_comp.py")): exec(open("test_py_comp.py").read())
 

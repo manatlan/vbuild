@@ -3,55 +3,97 @@
 import vbuild,sys,os
 import unittest
 
-class TestVueParserEncoding(unittest.TestCase):
+ONLYs=[]
+def only(f): # decorator to place on tests, to limit usage to only theses ones
+    ONLYs.append(f.__name__)
+    return f
 
+tu=u"""<template><div>français
+    <a title='España'><span class="flags es"></span></a>
+    <a title='中国'><span class="flags cn"></span></a>
+</div></template>"""
+
+ts="""<template><div>français
+    <a title='España'><span class="flags es"></span></a>
+    <a title='中国'><span class="flags cn"></span></a>
+</div></template>"""
+
+
+class TestVueParserEncoding(unittest.TestCase):
     def test_unicode(self):
-        t=u"""<template><div>
-            <a title='España'><span class="flags es"></span></a>
-            <a title='中国'><span class="flags cn"></span></a>
-        </div></template>"""
-        r=vbuild.VueParser(t)
+        r=vbuild.VueParser(tu)
+        self.assertEqual( type(tu) , type(r.html.value) )
+    def test_str(self):
+        r=vbuild.VueParser(ts)
+        self.assertEqual( type(ts) , type(r.html.value) )
+
+class TestVBuildEncoding(unittest.TestCase):
+    """ ENSURE : output type is the same as the input type
+        (mainly for py2, no trouble with py3)
+    """
+    def test_unicode(self):
+        r=vbuild.VBuild("x.vue",tu)
+        self.assertEqual( type(tu) , type(r.html) )
+
+        r=vbuild.VBuild(u"x.vue",tu)
+        self.assertEqual( type(tu) , type(r.html) )
 
     def test_str(self):
-        t="""<template><div>
-            <a title='España'><span class="flags es"></span></a>
-            <a title='中国'><span class="flags cn"></span></a>
-        </div></template>"""
-        r=vbuild.VueParser(t)
+        r=vbuild.VBuild("x.vue",ts)
+        self.assertEqual( type(ts) , type(r.html) )
+
+        r=vbuild.VBuild(u"x.vue",ts)
+        self.assertEqual( type(ts) , type(r.html) )
+
+    def test_unicode2(self):
+        r=vbuild.VBuild("xé.vue",tu)
+        self.assertEqual( type(tu) , type(r.html) )
+
+        r=vbuild.VBuild(u"xé.vue",tu)
+        self.assertEqual( type(tu) , type(r.html) )
+
+    def test_str2(self):
+        r=vbuild.VBuild("xé.vue",ts)
+        self.assertEqual( type(ts) , type(r.html) )
+
+        r=vbuild.VBuild(u"xé.vue",ts)
+        self.assertEqual( type(ts) , type(r.html) )
+
 
 class TestVueParser(unittest.TestCase):
 
     def test_1(self):
         h="""<template><div>XXX</div></template>"""
         r=vbuild.VueParser(h)
-        self.assertEqual(r.html,"<div>XXX</div>")
+        self.assertTrue(isinstance(r.html,vbuild.Content))
+        self.assertEqual(repr(r.html),"<div>XXX</div>")
         self.assertEqual(r.script,None)
         self.assertEqual(r.styles,[])
         self.assertEqual(r.scopedStyles,[])
         self.assertEqual(r.rootTag,"div")
-        
+
         h="""<template type="xxx"><div>XXX</div></template>"""
         r=vbuild.VueParser(h)
-        self.assertEqual(r.html,"<div>XXX</div>")
+        self.assertEqual(repr(r.html),"<div>XXX</div>")
 
     def test_malformed(self):
         h="""<template><div><a>XXX</div></template>"""
         r=vbuild.VueParser(h)
-        self.assertEqual(r.html,"<div><a>XXX</div>")
+        self.assertEqual(repr(r.html),"<div><a>XXX</div>")
         self.assertEqual(r.script,None)
         self.assertEqual(r.styles,[])
         self.assertEqual(r.scopedStyles,[])
         self.assertEqual(r.rootTag,"div")
-        
+
     def test_empty(self):
         h="""<template></template>"""
         r=vbuild.VueParser(h)
-        self.assertEqual(r.html,"")
+        self.assertEqual(repr(r.html),"")
         self.assertEqual(r.script,None)
         self.assertEqual(r.styles,[])
         self.assertEqual(r.scopedStyles,[])
         self.assertTrue(r.rootTag is None)
-        
+
     def test_more_than_one_template(self):
         h="""<template><div>jo</div></template><template><div>jo</div></template>"""
         with self.assertRaises(vbuild.VBuildException):
@@ -60,15 +102,15 @@ class TestVueParser(unittest.TestCase):
     def test_2(self):
         h="""<template>\n     \n   \t     \n     <div>XXX</div> \t \n    </template>"""
         r=vbuild.VueParser(h)
-        self.assertEqual(r.html,"<div>XXX</div>")
-        
+        self.assertEqual(repr(r.html),"<div>XXX</div>")
+
         h="""<template type="xxx">\n     \n   \t     \n     <div>XXX</div> \t \n    </template>"""
         r=vbuild.VueParser(h)
-        self.assertEqual(r.html,"<div>XXX</div>")
+        self.assertEqual(repr(r.html),"<div>XXX</div>")
 
         h="""<template> gsfdsgfd   <div>XXX</div>     gfdsgfd    </template>"""
         r=vbuild.VueParser(h)
-        self.assertEqual(r.html,"gsfdsgfd   <div>XXX</div>     gfdsgfd")    # acceptable, but not good
+        self.assertEqual(repr(r.html),"gsfdsgfd   <div>XXX</div>     gfdsgfd")    # acceptable, but not good
         self.assertEqual(r.rootTag,"div")    # acceptable, but not good
 
 
@@ -76,26 +118,26 @@ class TestVueParser(unittest.TestCase):
         h="""<template type="xxx">
             <div>XXX</div></template>"""
         r=vbuild.VueParser(h)
-        self.assertEqual(r.html,"<div>XXX</div>")
+        self.assertEqual(repr(r.html),"<div>XXX</div>")
 
         h="""<template type="xxx"><div>XXX</div>
         </template>"""
         r=vbuild.VueParser(h)
-        self.assertEqual(r.html,"<div>XXX</div>")
-        
+        self.assertEqual(repr(r.html),"<div>XXX</div>")
+
         h="""<template type="xxx">
             <div>XXX</div>
         </template>"""
         r=vbuild.VueParser(h)
-        self.assertEqual(r.html,"<div>XXX</div>")
+        self.assertEqual(repr(r.html),"<div>XXX</div>")
 
         h="""<template type="xxx">\r\n<div>XXX</div>\r\n</template>"""
         r=vbuild.VueParser(h)
-        self.assertEqual(r.html,"<div>XXX</div>")
+        self.assertEqual(repr(r.html),"<div>XXX</div>")
         h="""<template type="xxx">\n<div>XXX</div>\n</template>"""
         r=vbuild.VueParser(h)
-        self.assertEqual(r.html,"<div>XXX</div>")
-        
+        self.assertEqual(repr(r.html),"<div>XXX</div>")
+
     def test_bad_not_at_root(self):
         h="""<a><template type="xxx"><div>XXX</div></template></a>"""
         r=vbuild.VueParser(h)
@@ -144,21 +186,27 @@ class TestVueParser(unittest.TestCase):
     def test_full(self):
         h="""<template><div>XXX</div></template><style lang="sass">style</style><script lang="python">script</script>"""
         r=vbuild.VueParser(h)
-        self.assertEqual(r.script,"script")
-        self.assertEqual(r.styles[0],"style")
+        self.assertTrue(isinstance(r.html,vbuild.Content))
+        self.assertTrue(isinstance(r.script,vbuild.Content))
+        self.assertEqual(type(r.styles),list)
+        self.assertTrue(isinstance(r.styles[0],vbuild.Content))
+
+        self.assertEqual(repr(r.script),"script")
+        self.assertEqual(repr(r.styles[0]),"style")
         self.assertEqual(r.script.type,"python")
         self.assertEqual(r.styles[0].type,"sass")
-        self.assertEqual(r.html.type,None)
+
+        self.assertEqual(r.html.type,None)  # not used for html (now)
 
         h="""<template><div>XXX</div></template><style scoped>style</style><script>script</script>"""
         r=vbuild.VueParser(h)
-        self.assertEqual(r.script,"script")
-        self.assertEqual(r.scopedStyles[0],"style")
+        self.assertEqual(repr(r.script),"script")
+        self.assertEqual(repr(r.scopedStyles[0]),"style")
         self.assertEqual(r.script.type,None)
         self.assertEqual(r.scopedStyles[0].type,None)
-        self.assertEqual(r.html.type,None)
+        self.assertEqual(r.html.type,None)  # not used for html (now)
 
-        
+
 class TesCss(unittest.TestCase):
     def test_css1(self):
         self.assertEqual(vbuild.mkPrefixCss("","XXX"),"")
@@ -246,10 +294,10 @@ export default {
         self.assertEqual(r.tags,["name"])
         self.assertEqual(r.style.count("*[data-name]"),2)
         self.assertEqual(r.style.count("background"),3)
-        self.assertFalse(":scope" in str(r))
-        self.assertTrue("<div data-name>" in str(r))
-        self.assertTrue('<script type="text/x-template" id="tpl-name">' in str(r))
-        self.assertTrue("var name = Vue.component('name', {template:'#tpl-name'," in str(r))
+        self.assertFalse(":scope" in repr(r))
+        self.assertTrue("<div data-name>" in repr(r))
+        self.assertTrue('<script type="text/x-template" id="tpl-name">' in repr(r))
+        self.assertTrue("var name = Vue.component('name', {template:'#tpl-name'," in repr(r))
 
     def test_composant_complet_minify(self):
         h="""
@@ -349,7 +397,7 @@ export default {
         r=vbuild.VBuild("name.vue",h)
         self.assertEqual(r.script,"""var name = Vue.component('name', {template:'#tpl-name',\n    mounted() {}\n});""")
 
-    def test_sass(self):    
+    def test_sass(self):
         if not vbuild.hasSass: self.skipTest("Don't test sass (miss pyScss)")
 
         h="""<template><div>XXX</div></template>
@@ -362,7 +410,7 @@ export default {
         r=vbuild.VBuild("comp.vue",h)
         self.assertTrue("6px" in r.style)
         self.assertTrue("#ff8000" in r.style)
-        
+
         h="""<template><div>XXX</div></template>
         <Style scoped lang="sass">
         body {
@@ -373,9 +421,9 @@ export default {
             vbuild.VBuild("comp.vue",h)
 
 
-    def test_less(self):   
+    def test_less(self):
         if not vbuild.hasLess: self.skipTest("Cant test Less (instal lesscpy)")
-        
+
         h="""<template><div>XXX</div></template>
         <Style scoped Lang = "leSS" >
         body {
@@ -384,7 +432,7 @@ export default {
         </style>"""
         r=vbuild.VBuild("comp.vue",h)
         self.assertTrue("6px" in r.style)
-        
+
         h="""<template><div>XXX</div></template>
         <Style scoped lang="less">
         body {
@@ -392,13 +440,13 @@ export default {
         }
         </style>"""
         with self.assertRaises(vbuild.VBuildException):     # vbuild.VBuildException: Component 'comp.vue' got a CSS-PreProcessor trouble : Error evaluating expression:
-            vbuild.VBuild("comp.vue",h)            
+            vbuild.VBuild("comp.vue",h)
 
 
 class TestRenderFiles(unittest.TestCase):
     def testfiles(self):
         if not os.path.isdir("vues"): self.skipTest("Don't test real vue files (you haven't a vues folder with .vue files)")
-        
+
         import glob
         for i in glob.glob("vues/*.vue"):
             r=vbuild.render(i)
@@ -418,7 +466,7 @@ class TestRenderFiles(unittest.TestCase):
 
 class TestPyComponent(unittest.TestCase):
     """ urgghh ... minimal tests here ;-) """
-    
+
     def test_ok(self):
         c="""<template>
     <div>
@@ -497,7 +545,7 @@ class TestPy2Js(unittest.TestCase):
         self.assertTrue("Vue.component('toto',{" in js)
         self.assertTrue('name: "toto",' in js)
         self.assertTrue('template: `<div></div>`,' in js)
-        
+
     def test_MOUNTED(self):
         c="""class Component:
   def MOUNTED(self):
@@ -590,55 +638,33 @@ class TestTrans(unittest.TestCase):
         self.assertTrue("VUE.COMPONENT('TOTO'" in r.script)
         self.assertTrue('<script type="text/x-template" id="tpl-toto"><DIV DATA-TOTO></DIV></script>' in r.html)
         self.assertEqual(r.style,"/*Hello*/")
-        
+
 
     def tearDown(self):
         vbuild.transScript=lambda x: x
         vbuild.transStyle=lambda x: x
         vbuild.transHtml=lambda x: x
-    
-
-class TestjsMin(unittest.TestCase):
-    def test_bad(self):
-        if not vbuild.hasClosure: self.skipTest("Don't test local jsmin (miss closure)")
-        
-        s="""
-        kk{{_=*juhgj;://\\}$bc(.[hhh]
-        """
-        with self.assertRaises(vbuild.VBuildException): # vbuild.VBuildException: minimize error: [{'type': 'JSC_PARSE_ERROR', 'file': 'Input_0', 'lineno': 2, 'charno': 10, 'error': 'Parse error. Semi-colon expected', 'line': '        kk{{_=*jùhgj;://\\}$bc(.[hhh]'}]
-            vbuild.jsmin(s)
-
-    def test_min(self):
-        if not vbuild.hasClosure: self.skipTest("Don't test local jsmin (miss closure)")
-
-        s="""
-        async function  jo(...a) {
-            var f=(...a) => {let b=`hello`}
-        }
-        """
-        x=vbuild.jsmin(s)
-        self.assertTrue( "$jscomp" in x)
 
 class TestPyStdLibIncludeOrNot(unittest.TestCase):
     cj="""<template><div>yo</div></template>"""
     cp="""<template><div>yo</div></template><script>class Component: pass</script>"""
-    
+
     def setUp(self):
         self.default=vbuild.fullPyComp
-        
+
     def tearDown(self):
         vbuild.fullPyComp=self.default # reset to default
-    
+
     def isPythonComp(self,r):
         return "_pyfunc_op_instantiate(" in r.script
-    
+
     def nbPythonLibIncluded(self,r):
         return r.script.count("var _pyfunc_op_instantiate")
-    
+
     def test_base(self):
         r=vbuild.VBuild("c.vue",self.cj)
         self.assertFalse(self.isPythonComp(r))  # comp is js
-        
+
         r=vbuild.VBuild("c.vue",self.cp)
         self.assertTrue(self.isPythonComp(r))   # comp is py
 
@@ -658,7 +684,7 @@ class TestPyStdLibIncludeOrNot(unittest.TestCase):
         r+=vbuild.VBuild("c2.vue",self.cp)
         self.assertTrue(self.isPythonComp(r))
         self.assertEqual(self.nbPythonLibIncluded(r),1)    # the full std lib is included
-        
+
     def test_fullPyComp_True(self):
         vbuild.fullPyComp=True
         r=vbuild.VBuild("c.vue",self.cj)
@@ -677,22 +703,52 @@ class TestPyStdLibIncludeOrNot(unittest.TestCase):
         self.assertTrue(self.isPythonComp(r))
         self.assertEqual(self.nbPythonLibIncluded(r),0)    # nothing is included, it's up to you
 
-#~ class TestJSminOnline(unittest.TestCase):
-    #~ def test_bad(self):
-        #~ s="""
-        #~ kk{{_=*jùhgj;://\\}$bc(.[hhh]
-        #~ """
-        #~ with self.assertRaises(vbuild.VBuildException): # vbuild.VBuildException: minimize error: [{'type': 'JSC_PARSE_ERROR', 'file': 'Input_0', 'lineno': 2, 'charno': 10, 'error': 'Parse error. Semi-colon expected', 'line': '        kk{{_=*jùhgj;://\\}$bc(.[hhh]'}]
-            #~ vbuild.jsminOnline(s)
+class TestjsMin(unittest.TestCase):
+    def test_bad(self):
+        if not vbuild.hasClosure: self.skipTest("Don't test local jsmin (miss closure)")
 
-    #~ def test_min(self):
-        #~ s="""
-        #~ async function  jo(...a) {
-            #~ var f=(...a) => {let b=`hello`}
-        #~ }
-        #~ """
-        #~ x=vbuild.jsminOnline(s)
-        #~ self.assertTrue( "$jscomp" in x)
+        s="""
+        kk{{_=*juhgj;://\\}$bc(.[hhh]
+        """
+        with self.assertRaises(vbuild.VBuildException): # vbuild.VBuildException: minimize error: [{'type': 'JSC_PARSE_ERROR', 'file': 'Input_0', 'lineno': 2, 'charno': 10, 'error': 'Parse error. Semi-colon expected', 'line': '        kk{{_=*jùhgj;://\\}$bc(.[hhh]'}]
+            vbuild.jsmin(s)
+
+    def test_min(self):
+        if not vbuild.hasClosure: self.skipTest("Don't test local jsmin (miss closure)")
+
+        s="""
+        async function  jo(...a) {
+            var f=(...a) => {let b=`hello`}
+        }
+        """
+        x=vbuild.jsmin(s)
+        self.assertTrue( "$jscomp" in x)
+
+class TestJSminOnline(unittest.TestCase):
+    def test_bad(self):
+        s="""
+        kk{{_=*jùhgj;://\\}$bc(.[hhh]
+        """
+        with self.assertRaises(vbuild.VBuildException): # vbuild.VBuildException: minimize error: [{'type': 'JSC_PARSE_ERROR', 'file': 'Input_0', 'lineno': 2, 'charno': 10, 'error': 'Parse error. Semi-colon expected', 'line': '        kk{{_=*jùhgj;://\\}$bc(.[hhh]'}]
+            vbuild.jsminOnline(s)
+
+    def test_min(self):
+        s="""
+        async function  jo(...a) {
+            var f=(...a) => {let b=`hello`}
+        }
+        """
+        x=vbuild.jsminOnline(s)
+        self.assertTrue( "$jscomp" in x)
 
 if __name__ == '__main__':
+
+    if ONLYs:
+        print("*** WARNING *** skip some tests !")
+        def load_tests(loader, tests, pattern):
+            suite = unittest.TestSuite()
+            for c in tests._tests:
+                suite.addTests( [t for t in c._tests if t._testMethodName in ONLYs] )
+            return suite
+
     unittest.main()
