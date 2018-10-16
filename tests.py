@@ -297,7 +297,7 @@ export default {
         self.assertFalse(":scope" in repr(r))
         self.assertTrue("<div data-name>" in repr(r))
         self.assertTrue('<script type="text/x-template" id="tpl-name">' in repr(r))
-        self.assertTrue("var name = Vue.component('name', {template:'#tpl-name'," in repr(r))
+        self.assertTrue("var name = Vue.component('name', {template:`#tpl-name`," in repr(r))
 
     def test_composant_complet_minify(self):
         h="""
@@ -354,7 +354,7 @@ export default {
         r=vbuild.VBuild("name.vue",h)
         self.assertTrue("<div data-name>" in str(r))
         self.assertTrue('<script type="text/x-template" id="tpl-name">' in str(r))
-        self.assertTrue("var name = Vue.component('name', {template:'#tpl-name'," in str(r))
+        self.assertTrue("var name = Vue.component('name', {template:`#tpl-name`," in str(r))
 
 
     def test_bad_composant_add(self):
@@ -368,8 +368,8 @@ export default {
         cc=sum([c,d])
         self.assertTrue(cc.html.count("<div data-c>XXX</div>")==1)
         self.assertTrue(cc.html.count("<div data-d>XXX</div>")==1)
-        self.assertTrue(cc.script.count("var c = Vue.component('c', {template:'#tpl-c',});")==1)
-        self.assertTrue(cc.script.count("var d = Vue.component('d', {template:'#tpl-d',});")==1)
+        self.assertTrue(cc.script.count("var c = Vue.component('c', {template:`#tpl-c`,});")==1)
+        self.assertTrue(cc.script.count("var d = Vue.component('d', {template:`#tpl-d`,});")==1)
 
     def test_pickable(self):    # so it's GAE memcach'able !
         h="""
@@ -395,7 +395,7 @@ export default {
 </script>
 """
         r=vbuild.VBuild("name.vue",h)
-        self.assertEqual(r.script,"""var name = Vue.component('name', {template:'#tpl-name',\n    mounted() {}\n});""")
+        self.assertEqual(r.script,"""var name = Vue.component('name', {template:`#tpl-name`,\n    mounted() {}\n});""")
 
     def test_sass(self):
         if not vbuild.hasSass: self.skipTest("Don't test sass (miss pyScss)")

@@ -232,17 +232,10 @@ class VBuild:
                     raise VBuildException("Python Component '%s' is broken : %s" % (filename,traceback.format_exc()))
             else:
                 ######################################################### js
-                if vp.script:
-                    p1=vp.script.value.find("{")
-                    p2=vp.script.value.rfind("}")
-                    if 0 <= p1 <= p2:
-                        js= vp.script.value[p1:p2+1]
-                    else:
-                        raise VBuildException("Component %s contains a bad script" % filename)                    
-                else:
-                    js="{}"
-                
-                self._script="""var %s = Vue.component('%s', %s);""" % (name,name,js.replace("{","{template:'#%s'," % tplId,1))
+                try:
+                    self._script=mkClassicVueComponent(name,'#'+tplId,vp.script and vp.script.value)
+                except Exception as e:
+                    raise VBuildException("JS Component %s contains a bad script" % filename)                    
 
             # self._script=transScript(self._script)
             self.style=transStyle(self.style)
@@ -283,6 +276,19 @@ class VBuild:
 %s
 </script>
 """ % (self.style,self.html,self.script)
+
+def mkClassicVueComponent(name,template,code):
+    if code is None:
+        js="{}"
+    else:
+        p1=code.find("{")
+        p2=code.rfind("}")
+        if 0 <= p1 <= p2:
+            js= code[p1:p2+1]
+        else:
+            raise Exception("Can't find valid content inside '{' and '}'")
+
+    return """var %s = Vue.component('%s', %s);""" % (name,name,js.replace("{","{template:`%s`," % template,1))
 
 def mkPythonVueComponent(name,template,code,genStdLibMethods=True):
     """ Transpile the component 'name', which have the template 'template',
