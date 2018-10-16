@@ -212,7 +212,8 @@ class VBuild:
             html=re.sub(r'^<([\w-]+)',r"<\1 %s"%dataId,vp.html.value)
 
             self.tags=[name]
-            self.html="""<script type="text/x-template" id="%s">%s</script>""" % (tplId, transHtml(html) )
+            # self.html="""<script type="text/x-template" id="%s">%s</script>""" % (tplId, transHtml(html) )
+            self._html=[(tplId,html)]
             
             self.style=""
             try:
@@ -224,7 +225,7 @@ class VBuild:
                 raise VBuildException("Component '%s' got a CSS-PreProcessor trouble : %s" % (filename,e))
                 
             # and set self._script !
-            if vp.script and "class Component:" in vp.script.value:
+            if vp.script and ("class Component:" in vp.script.value):
                 ######################################################### python
                 try:
                     self._script=mkPythonVueComponent(name,'#'+tplId,vp.script.value, fullPyComp)
@@ -237,8 +238,14 @@ class VBuild:
                 except Exception as e:
                     raise VBuildException("JS Component %s contains a bad script" % filename)                    
 
-            # self._script=transScript(self._script)
             self.style=transStyle(self.style)
+
+    @property
+    def html(self):
+        l=[]
+        for tplId,html in self._html:
+            l.append( """<script type="text/x-template" id="%s">%s</script>""" % (tplId, transHtml(html) ) )
+        return "\n".join(l)
 
     @property
     def script(self):
@@ -254,7 +261,7 @@ class VBuild:
         join=lambda *l: ("\n".join(l)).strip("\n")
         same=set(self.tags).intersection(set(o.tags))
         if same: raise VBuildException("You can't have multiple '%s'" % list(same)[0])
-        self.html=join(self.html,o.html)
+        self._html.extend(o._html)
         self._script=join(self._script,o._script)
         self.style=join(self.style,o.style)
         self.tags.extend(o.tags)
