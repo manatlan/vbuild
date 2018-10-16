@@ -244,7 +244,7 @@ class VBuild:
                 
                 self._script="""var %s = Vue.component('%s', %s);""" % (name,name,js.replace("{","{template:'#%s'," % tplId,1))
 
-            self._script=transScript(self._script)
+            # self._script=transScript(self._script)
             self.style=transStyle(self.style)
 
     @property
@@ -253,9 +253,9 @@ class VBuild:
         isLibInside="var _pyfunc_op_instantiate" in self._script
 
         if (fullPyComp is False) and isPyComp and not isLibInside:
-            return pscript.get_full_std_lib()+"\n"+self._script
+            return transScript(pscript.get_full_std_lib()+"\n"+self._script)
         else:
-            return self._script
+            return transScript(self._script)
         
     def __add__(self,o):
         join=lambda *l: ("\n".join(l)).strip("\n")
