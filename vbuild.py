@@ -7,7 +7,7 @@
 #
 # https://github.com/manatlan/vbuild
 # #############################################################################
-__version__="0.6.2"   #py2.7 & py3.5 !!!!
+__version__="0.7.0"   #py2.7 & py3.5 !!!!
 
 import re,os,json,glob,itertools,traceback,pscript,subprocess,pkgutil
 
@@ -117,6 +117,7 @@ class VueParser(HTMLParser):
     """ Just a class to extract <template/><script/><style/> from a buffer.
         self.html/script/styles/scopedStyles are Content's object, or list of. 
     """
+    voidElements="area base br col command embed hr img input keygen link menuitem meta param source track wbr".split(" ")
     def __init__(self,buf,name=""):
         """ Extract stuff from the vue/buffer 'buf'
             (name is just useful for naming the component in exceptions)
@@ -133,23 +134,28 @@ class VueParser(HTMLParser):
     
     def handle_starttag(self, tag, attrs):
         self._tag=tag
-        self._level+=1
-        attributes=dict([(k.lower(),v and v.lower()) for k,v in attrs])
-        if tag=="style" and attributes.get("lang",None):
-            self._styleLang= attributes["lang"]
-        if tag=="script" and attributes.get("lang",None):
-            self._scriptLang= attributes["lang"]
-        if self._level==1 and tag=="template":
-            if self._p1 is not None: raise VBuildException( "Component %s contains more than one template" % self.name)
-            self._p1=self.getOffset()+len(self.get_starttag_text())
-        if self._level==2 and self._p1: # test p1, to be sure to be in a template
-            if self.rootTag is not None: raise VBuildException( "Component %s can have only one top level tag !" % self.name)
-            self.rootTag = tag
+        
+        # don't manage if it's a void element
+        if tag not in self.voidElements: 
+            self._level+=1
+            
+            attributes=dict([(k.lower(),v and v.lower()) for k,v in attrs])
+            if tag=="style" and attributes.get("lang",None):
+                self._styleLang= attributes["lang"]
+            if tag=="script" and attributes.get("lang",None):
+                self._scriptLang= attributes["lang"]
+            if self._level==1 and tag=="template":
+                if self._p1 is not None: raise VBuildException( "Component %s contains more than one template" % self.name)
+                self._p1=self.getOffset()+len(self.get_starttag_text())
+            if self._level==2 and self._p1: # test p1, to be sure to be in a template
+                if self.rootTag is not None: raise VBuildException( "Component %s can have only one top level tag !" % self.name)
+                self.rootTag = tag
 
     def handle_endtag(self, tag):
-        if tag=="template" and self._p1: # don't watch the level (so it can accept mal formed html
-            self.html=Content(self.rawdata[self._p1:self.getOffset()])
-        self._level-=1
+        if tag not in self.voidElements: 
+            if tag=="template" and self._p1: # don't watch the level (so it can accept mal formed html
+                self.html=Content(self.rawdata[self._p1:self.getOffset()])
+            self._level-=1
         
     def handle_data(self, data):
         if self._level==1:
@@ -215,33 +221,30 @@ class VBuild:
             # self.html="""<script type="text/x-template" id="%s">%s</script>""" % (tplId, transHtml(html) )
             self._html=[(tplId,html)]
             
-            self.style=""
-            try:
-                for style in vp.styles:
-                    self.style+=mkPrefixCss( preProcessCSS(style,partial) )+"\n"
-                for style in vp.scopedStyles:
-                    self.style+=mkPrefixCss( preProcessCSS(style,partial),"*[%s]" % dataId)+"\n"
-            except Exception as e:
-                raise VBuildException("Component '%s' got a CSS-PreProcessor trouble : %s" % (filename,e))
+            self._styles=[]
+            for style in vp.styles:
+                self._styles.append( ("", style, filename) )
+            for style in vp.scopedStyles:
+                self._styles.append( ("*[%s]" % dataId, style, filename) )
                 
             # and set self._script !
             if vp.script and ("class Component:" in vp.script.value):
                 ######################################################### python
                 try:
-                    self._script=mkPythonVueComponent(name,'#'+tplId,vp.script.value, fullPyComp)
+                    self._script=[mkPythonVueComponent(name,'#'+tplId,vp.script.value, fullPyComp)]
                 except Exception as e:
                     raise VBuildException("Python Component '%s' is broken : %s" % (filename,traceback.format_exc()))
             else:
                 ######################################################### js
                 try:
-                    self._script=mkClassicVueComponent(name,'#'+tplId,vp.script and vp.script.value)
+                    self._script=[mkClassicVueComponent(name,'#'+tplId,vp.script and vp.script.value)]
                 except Exception as e:
                     raise VBuildException("JS Component %s contains a bad script" % filename)                    
 
-            self.style=transStyle(self.style)
 
     @property
     def html(self):
+        """ Return HTML (script tags of embbeded components), after transHtml"""
         l=[]
         for tplId,html in self._html:
             l.append( """<script type="text/x-template" id="%s">%s</script>""" % (tplId, transHtml(html) ) )
@@ -249,21 +252,33 @@ class VBuild:
 
     @property
     def script(self):
-        isPyComp="_pyfunc_op_instantiate(" in self._script  # in fact : contains
-        isLibInside="var _pyfunc_op_instantiate" in self._script
+        """ Return JS (js of embbeded components), after transScript"""
+        js="\n".join(self._script)
+        isPyComp="_pyfunc_op_instantiate(" in js  # in fact : contains
+        isLibInside="var _pyfunc_op_instantiate" in js
 
         if (fullPyComp is False) and isPyComp and not isLibInside:
-            return transScript(pscript.get_full_std_lib()+"\n"+self._script)
+            return transScript(pscript.get_full_std_lib()+"\n"+js)
         else:
-            return transScript(self._script)
-        
+            return transScript(js)
+            
+    @property
+    def style(self):
+        """ Return CSS (styles of embbeded components), after preprocess css & transStyle"""
+        style=""
+        try:
+            for prefix,s,filename in self._styles:
+                style+=mkPrefixCss( preProcessCSS(s,partial),prefix )+"\n"
+        except Exception as e:
+            raise VBuildException("Component '%s' got a CSS-PreProcessor trouble : %s" % (filename,e))
+        return transStyle(style).strip()
+    
     def __add__(self,o):
-        join=lambda *l: ("\n".join(l)).strip("\n")
         same=set(self.tags).intersection(set(o.tags))
         if same: raise VBuildException("You can't have multiple '%s'" % list(same)[0])
         self._html.extend(o._html)
-        self._script=join(self._script,o._script)
-        self.style=join(self.style,o.style)
+        self._script.extend(o._script)
+        self._styles.extend(o._styles)
         self.tags.extend(o.tags)
         return self
     def __radd__(self, o):
@@ -400,4 +415,5 @@ if __name__=="__main__":
     print("Closure installed (closure) :",hasClosure)
     if(os.path.isfile("tests.py")): exec(open("tests.py").read())
     #~ if(os.path.isfile("test_py_comp.py")): exec(open("test_py_comp.py").read())
+
 

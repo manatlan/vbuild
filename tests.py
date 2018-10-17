@@ -18,7 +18,6 @@ ts="""<template><div>français
     <a title='中国'><span class="flags cn"></span></a>
 </div></template>"""
 
-
 class TestVueParserEncoding(unittest.TestCase):
     def test_unicode(self):
         r=vbuild.VueParser(tu)
@@ -77,9 +76,9 @@ class TestVueParser(unittest.TestCase):
         self.assertEqual(repr(r.html),"<div>XXX</div>")
 
     def test_malformed(self):
-        h="""<template><div><a>XXX</div></template>"""
+        h="""<template><div><br>XXX</div></template>"""
         r=vbuild.VueParser(h)
-        self.assertEqual(repr(r.html),"<div><a>XXX</div>")
+        self.assertEqual(repr(r.html),"<div><br>XXX</div>")
         self.assertEqual(r.script,None)
         self.assertEqual(r.styles,[])
         self.assertEqual(r.scopedStyles,[])
@@ -417,8 +416,9 @@ export default {
             font: $unknown;
         }
         </style>"""
+        r=vbuild.VBuild("comp.vue",h)
         with self.assertRaises(vbuild.VBuildException):     # vbuild.VBuildException: Component 'comp.vue' got a CSS-PreProcessor trouble : Error evaluating expression:
-            vbuild.VBuild("comp.vue",h)
+            r.style
 
 
     def test_less(self):
@@ -439,9 +439,78 @@ export default {
             font: @unknown;
         }
         </style>"""
+        r=vbuild.VBuild("comp.vue",h)
         with self.assertRaises(vbuild.VBuildException):     # vbuild.VBuildException: Component 'comp.vue' got a CSS-PreProcessor trouble : Error evaluating expression:
-            vbuild.VBuild("comp.vue",h)
+            r.style
 
+    def testVoidElements(self):
+        t="""<template>
+<div>
+    <hr>
+    hello {{name}}<br>
+    <hr>
+</div>
+</template>
+<style>
+h1 {color:blue}
+</style>
+<script>
+export defailt {
+    props:["name"],
+}
+</script>
+    """
+        rendered="""
+<style>
+h1 {color:blue}
+</style>
+<script type="text/x-template" id="tpl-j"><div data-j>
+    <hr>
+    hello {{name}}<br>
+    <hr>
+</div></script>
+<script>
+var j = Vue.component('j', {template:`#tpl-j`,
+    props:["name"],
+});
+</script>
+"""
+        r=vbuild.VBuild("jo.vu",t)
+        self.assertEqual(str(r),rendered)
+    def testVoidElements_closed(self):
+        t="""<template>
+<div>
+    <hr/>
+    hello {{name}}<br/>
+    <hr>
+</div>
+</template>
+<style>
+h1 {color:blue}
+</style>
+<script>
+export defailt {
+    props:["name"],
+}
+</script>
+    """
+        rendered="""
+<style>
+h1 {color:blue}
+</style>
+<script type="text/x-template" id="tpl-j"><div data-j>
+    <hr/>
+    hello {{name}}<br/>
+    <hr>
+</div></script>
+<script>
+var j = Vue.component('j', {template:`#tpl-j`,
+    props:["name"],
+});
+</script>
+"""
+        r=vbuild.VBuild("jo.vu",t)
+        self.assertEqual(str(r),rendered)
 
 class TestRenderFiles(unittest.TestCase):
     def testfiles(self):
@@ -455,8 +524,8 @@ class TestRenderFiles(unittest.TestCase):
         self.assertTrue(str(vbuild.render( "vues/list.vue")))
         self.assertTrue(str(vbuild.render( "vues/*.vue")))
         self.assertTrue(str(vbuild.render( "*/*.vue")))
-        self.assertTrue(str(vbuild.render( "vues/req.vue", "vues/todo.vue" )))
-        self.assertTrue(str(vbuild.render( ["vues/req.vue","vues/todo.vue"] )))
+        self.assertTrue(str(vbuild.render( "vues/test.vue", "vues/todo.vue" )))
+        self.assertTrue(str(vbuild.render( ["vues/test.vue","vues/todo.vue"] )))
         self.assertTrue(str(vbuild.render( glob.glob("vues/*.vue"))))
 
 

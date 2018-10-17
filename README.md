@@ -6,6 +6,8 @@ It's just an utility to extract HTML(template), SCRIPT and STYLE from a [VUE/SFC
 
 [Available on pypi](https://pypi.org/project/vbuild/)
 
+[Changelog](https://github.com/manatlan/vbuild/blob/master/changelog.md)
+
 ## Features
 
  * **NO node-js stack**, only pure python (py2 or py3 compliant)
