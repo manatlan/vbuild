@@ -229,9 +229,9 @@ p > a, p>i { /*nib*/ }
 """
         ok="""
 XXX {padding:4px;background: yellow}
-XXX button[ name ] { background:red }
-XXX hr *, XXX body:hover { color:red;}
-XXX p > a, XXX p>i { }
+XXX button[ name ] {background:red }
+XXX hr *, XXX body:hover {color:red;}
+XXX p > a, XXX p>i {}
 """
         tt=vbuild.mkPrefixCss(t,"XXX")
         self.assertEqual(tt,ok.strip())

@@ -7,7 +7,7 @@
 #
 # https://github.com/manatlan/vbuild
 # #############################################################################
-__version__="0.7.0"   #py2.7 & py3.5 !!!!
+__version__="0.7.1"   #py2.7 & py3.5 !!!!
 
 import re,os,json,glob,itertools,traceback,pscript,subprocess,pkgutil
 
@@ -182,8 +182,11 @@ def mkPrefixCss(css,prefix=""):
     css=re.sub(re.compile("[ \t\n]+",re.DOTALL ) ," " ,css)
     for rule in re.findall(r'[^}]+{[^}]+}', css):
         sels,decs=rule.split("{",1)
-        l=[prefix+(" "+i.strip() if i.strip()!=":scope" else "") for i in sels.split(",")]
-        lines.append( ", ".join(l) +" {"+decs )
+        if prefix:
+            l=[(prefix+" "+i.replace(":scope","").strip()).strip() for i in sels.split(",")]
+        else:
+            l=[(i.replace(":scope","").strip()) for i in sels.split(",")]
+        lines.append( ", ".join(l) +" {"+decs.strip() )
     return "\n".join(lines).strip("\n ")
 
 class VBuild:
@@ -415,5 +418,4 @@ if __name__=="__main__":
     print("Closure installed (closure) :",hasClosure)
     if(os.path.isfile("tests.py")): exec(open("tests.py").read())
     #~ if(os.path.isfile("test_py_comp.py")): exec(open("test_py_comp.py").read())
-
 
