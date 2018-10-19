@@ -7,7 +7,7 @@
 #
 # https://github.com/manatlan/vbuild
 # #############################################################################
-__version__="0.7.1"   #py2.7 & py3.5 !!!!
+__version__="0.7.2"   #py2.7 & py3.5 !!!!
 
 import re,os,json,glob,itertools,traceback,pscript,subprocess,pkgutil
 
@@ -363,6 +363,12 @@ var %(name)s=(function() {
 
     %(pyjs)s
 
+    function construct(constructor, args) {
+        function F() {return constructor.apply(this, args);}
+        F.prototype = constructor.prototype;
+        return new F();
+    }
+
     return Vue.component('%(name)s',{
         name: "%(name)s",
         props: %(props)s,
@@ -370,7 +376,7 @@ var %(name)s=(function() {
         data: function() {
             var props=[]
             for(var n of %(props)s) props.push( this.$props[n] )
-            var i = new %(classname)s(...props)
+            var i=construct(%(classname)s,props) // new %(classname)s(...props)
             return JSON.parse(JSON.stringify( i ));
         },
         computed: {
