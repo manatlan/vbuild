@@ -41,8 +41,8 @@ The component is named with the `unique name`, and declare its template with the
 
 ## What are this unique things ?
 - `unique name` : it's the (base)name of the component (without the extension ".vue").
-- `unique attribut` : it is prefixed with `data-`, and the full path to the component
-- `unique template id` : it is prefixed with `tpl-`, and the full path to the component
+- `unique attribut` : it is prefixed with `data-`, and the full path to the component (paths separated by `-`)
+- `unique template id` : it is prefixed with `tpl-`, and the full path to the component (paths separated by `-`)
 
 So if the component is "vues/compo1.vue"
 - its `unique name` will be `compo1`
