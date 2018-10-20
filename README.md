@@ -4,7 +4,7 @@
 
 It's just an utility to [generate](https://github.com/manatlan/vbuild/blob/master/doc/generate.md) HTML(template), SCRIPT and STYLE from a [VUE/SFC component]((https://fr.vuejs.org/v2/guide/single-file-components.html)) (*.vue). It won't replace webpack/nodejs/vue-cli, it fills the _"Sometimes you have to work with the tools you have, not the ones you want."_ gap.
 
-[DEMO](https://on-the.appspot.com/vbuild/) (with py2, so no async on python side ;-( )
+[DEMO](https://on-the.appspot.com/vbuild/index.html) (with py2, so no async on python side ;-( )
 
 [Available on pypi](https://pypi.org/project/vbuild/)
 
