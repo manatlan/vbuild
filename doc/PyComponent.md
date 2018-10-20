@@ -125,6 +125,8 @@ def WATCH_1(self, newVal, oldVal, name="cpt"): pass
 def WATCH_2(self, newVal, oldVal, name="$store.state.mylist"): pass
 ```
 
+You can test that on [vbuild's demo](https://on-the.appspot.com/vbuild/) !
+
 ## TODO:
 
  * add more lifecycle events
