@@ -20,6 +20,7 @@ It's just an utility to [generate](https://github.com/manatlan/vbuild/blob/maste
  * Respect [VueJs specs](https://vue-loader.vuejs.org/spec.html) (at least one template tag, many style (scoped or not) tags)
  * `templates` are converted to a `<script type="text/x-template" id="XXX"></script>` (not converted to JS)
  * Unittested (coverage 100%)
+ * no import/from ! 
  
 
 ```python
