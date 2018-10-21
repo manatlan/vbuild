@@ -71,7 +71,7 @@ If you want to use the full features, you'll need to install the optionnal's lib
 sudo pip install pyscss lesscpy closure
 ```
 
-All theses libs works with py2 and/or py3, and you could use the [ccs-pre-processors SASS and LESS](https://github.com/manatlan/vbuild/blob/master/doc/CssPreProcess.md), and [closure to minify js](https://github.com/manatlan/vbuild/blob/master/doc/minimize.md).
+All theses libs works with py2 and/or py3, and you could use the [css-pre-processors SASS and LESS](https://github.com/manatlan/vbuild/blob/master/doc/CssPreProcess.md), and [closure to minify js](https://github.com/manatlan/vbuild/blob/master/doc/minimize.md).
 
 ## TODO
 
