@@ -49,5 +49,5 @@ So if the component is "vues/compo1.vue"
 - its `unique attribut` will be `data-vues-compo1`
 - its `unique template id` will be `tpl-vues-compo1`
 
-You can test that on [vbuild's demo](https://on-the.appspot.com/vbuild/index.html) !
+You can test that on [vbuild's demo](https://manatlan.alwaysdata.net/vbuild/) !
 
