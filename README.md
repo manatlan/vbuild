@@ -15,7 +15,7 @@ It's just an utility to [generate](https://github.com/manatlan/vbuild/blob/maste
  * **NO node-js stack**, only pure python (py2 or py3 compliant)
  * Ability to use [python components](https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md)
  * Components can be styled with [SASS or LESS ccs-pre-processors](https://github.com/manatlan/vbuild/blob/master/doc/CssPreProcess.md) !
- * Provide a [JS-minimizer (ES5 compliant JS, via closure)](https://github.com/manatlan/vbuild/blob/master/doc/minimize.md)
+ * Provide a [JS-minimifier (ES5 compliant JS, via closure)](https://github.com/manatlan/vbuild/blob/master/doc/minimize.md)
  * Ability to [post process stuff](https://github.com/manatlan/vbuild/blob/master/doc/PostProcess.md), with your own processors
  * Respect [VueJs specs](https://vue-loader.vuejs.org/spec.html) (at least one template tag, many style (scoped or not) tags)
  * `templates` are converted to a `<script type="text/x-template" id="XXX"></script>` (not converted to JS)
