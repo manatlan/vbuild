@@ -6,11 +6,11 @@
 - one month anniversary ;-)
 
 **0.7.2: 2018/10/19**
-- EVOL: PyComp generate JS which is Closure(online) compliant (avoid "This code cannot be converted from ES6.")
+- EVOL: PyComp generate JS Closure(online)'s compliant (avoid "This code cannot be converted from ES6.")
 - more unit tests
 
 **0.7.1: 2018/10/17**
-- FIX: sass & inner class def works now
+- FIX: sass/less nested rules works now !
 
 **0.7.0: 2018/10/17**
 - EVOL: pre-process css & trans[Script|Html|Style] is done at rendering time
