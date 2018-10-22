@@ -7,7 +7,7 @@
 #
 # https://github.com/manatlan/vbuild
 # #############################################################################
-__version__="0.7.2"   #py2.7 & py3.5 !!!!
+__version__="0.7.3"   #py2.7 & py3.5 !!!!
 
 import re,os,json,glob,itertools,traceback,pscript,subprocess,pkgutil
 
@@ -177,6 +177,20 @@ def mkPrefixCss(css,prefix=""):
     """Add the prexix (css selector) to all rules in the 'css'
        (used to scope style in context)
     """
+    medias=[]
+    while "@media" in css:
+        p1=css.find("@media",0)
+        p2=css.find("{",p1)+1
+        lv=1
+        while lv>0:
+            lv+= 1 if css[p2]=="{" else -1 if css[p2]=="}" else 0
+            p2+=1
+        block= css[p1:p2]
+        mediadef=block[:block.find("{")].strip()
+        mediacss=block[ block.find("{")+1:block.rfind("}") ].strip()
+        css=css.replace(block,"")
+        medias.append( (mediadef,mkPrefixCss(mediacss,prefix)))
+        
     lines=[]
     css=re.sub(re.compile("/\*.*?\*/",re.DOTALL ) ,"" ,css)
     css=re.sub(re.compile("[ \t\n]+",re.DOTALL ) ," " ,css)
@@ -185,9 +199,11 @@ def mkPrefixCss(css,prefix=""):
         if prefix:
             l=[(prefix+" "+i.replace(":scope","").strip()).strip() for i in sels.split(",")]
         else:
-            l=[(i.replace(":scope","").strip()) for i in sels.split(",")]
+            l=[(i.strip()) for i in sels.split(",")]
         lines.append( ", ".join(l) +" {"+decs.strip() )
+    lines.extend( ["%s {%s}" % (d,c) for d,c in medias])
     return "\n".join(lines).strip("\n ")
+
 
 class VBuild:
     """ the main class, provide an instance :
@@ -202,13 +218,17 @@ class VBuild:
                 filename: which will be used to name the component, and create the namespace for the template
                 content: the string buffer which contains the sfc/vue component
         """
+        if not filename:
+            raise VBuildException("Component %s should be named" % filename)
+
         if type(content)!=type(filename):           # only py2, transform 
             if type(content)==unicode:              # filename to the same type
                 filename=filename.decode("utf8")    # of content to avoid
             else:                                   # troubles with implicit 
                 filename=filename.encode("utf8")    # ascii conversions (regex)
 
-        name=os.path.basename(filename)[:-4]
+        name=os.path.splitext(os.path.basename(filename))[0]
+
         unique = filename[:-4].replace("/","-").replace("\\","-").replace(":","-")
         # unique = name+"-"+''.join(random.choice(string.letters + string.digits) for _ in range(8))
         tplId="tpl-"+unique
@@ -292,15 +312,14 @@ class VBuild:
         self.__dict__ = d
     def __repr__(self):
         """ return an html ready represenation of the component(s) """
-        return """
-<style>
-%s
-</style>
-%s
-<script>
-%s
-</script>
-""" % (self.style,self.html,self.script)
+        hh=self.html
+        jj=self.script
+        ss=self.style
+        s=""
+        if ss: s+="<style>\n%s\n</style>\n" % ss
+        if hh: s+="%s\n" % hh
+        if jj: s+="<script>\n%s\n</script>\n" % jj
+        return s
 
 def mkClassicVueComponent(name,template,code):
     if code is None:

@@ -1,3 +1,10 @@
+**0.7.3: 2018/10/22**
+- EVOL: styles can contains mediaquery now
+- EVOL: repr(vbuild) return only needed tags
+- don't remove ":scope" when styles are non scoped
+- EVOL: better handle filename -> component name
+- one month anniversary ;-)
+
 **0.7.2: 2018/10/19**
 - EVOL: PyComp generate JS which is Closure(online) compliant (avoid "This code cannot be converted from ES6.")
 - more unit tests

@@ -237,7 +237,52 @@ XXX p > a, XXX p>i {}
         self.assertEqual(tt,ok.strip())
 
 
+    def test_mediaquery_noprefix(self):
+        t="""
+        :scope {color:green}
+        @media (max-width: 700px) {
+            button {color:red}
+            body {color:green}
+        }
+        button2 {color:yellow}
+        """
+        r=""":scope {color:green}
+button2 {color:yellow}
+@media (max-width: 700px) {button {color:red}
+body {color:green}}"""
+        x=vbuild.mkPrefixCss(t)
+        self.assertEqual(x,r)
+
+
+    def test_mediaquery_prefix(self):
+        t="""
+        :scope {color:green}
+        @media (max-width: 700px) {
+            button {color:red}
+            body {color:green}
+        }
+        button2 {color:yellow}
+        """
+        r="""XXX {color:green}
+XXX button2 {color:yellow}
+@media (max-width: 700px) {XXX button {color:red}\nXXX body {color:green}}"""
+        x=vbuild.mkPrefixCss(t,"XXX")
+        self.assertEqual(x,r)
+
 class TestVBuild(unittest.TestCase):
+
+    def test_names(self):
+        h="""<template><div>XXX</div></template>"""
+        self.assertEqual(vbuild.VBuild("mycomp.vue",h).tags[0],"mycomp")
+        self.assertEqual(vbuild.VBuild("jo/mycomp.vue",h).tags[0],"mycomp")
+        self.assertEqual(vbuild.VBuild("jo/mycomp.vuec",h).tags[0],"mycomp")
+        self.assertEqual(vbuild.VBuild("jo/mycomp.vu",h).tags[0],"mycomp")
+        self.assertEqual(vbuild.VBuild("jo/mycomp",h).tags[0],"mycomp")
+        with self.assertRaises(vbuild.VBuildException):
+            r=vbuild.VBuild("",h) # Component %s should be named
+        with self.assertRaises(vbuild.VBuildException):
+            r=vbuild.VBuild(None,h) # Component %s should be named
+
 
     def test_bad_more_than_one_root(self):
         h="""<template type="xxx"> <div>XXX</div> <div>XXX</div> </template>"""
@@ -472,23 +517,23 @@ export defailt {
 }
 </script>
     """
-        rendered="""
-<style>
+        rendered="""<style>
 h1 {color:blue}
 </style>
-<script type="text/x-template" id="tpl-j"><div data-j>
+<script type="text/x-template" id="tpl-jo"><div data-jo>
     <hr>
     hello {{name}}<br>
     <hr>
 </div></script>
 <script>
-var j = Vue.component('j', {template:`#tpl-j`,
+var jo = Vue.component('jo', {template:`#tpl-jo`,
     props:["name"],
 });
 </script>
 """
-        r=vbuild.VBuild("jo.vu",t)
+        r=vbuild.VBuild("jo.vue",t)
         self.assertEqual(str(r),rendered)
+        
     def testVoidElements_closed(self):
         t="""<template>
 <div>
@@ -506,22 +551,21 @@ export defailt {
 }
 </script>
     """
-        rendered="""
-<style>
+        rendered="""<style>
 h1 {color:blue}
 </style>
-<script type="text/x-template" id="tpl-j"><div data-j>
+<script type="text/x-template" id="tpl-jo"><div data-jo>
     <hr/>
     hello {{name}}<br/>
     <hr>
 </div></script>
 <script>
-var j = Vue.component('j', {template:`#tpl-j`,
+var jo = Vue.component('jo', {template:`#tpl-jo`,
     props:["name"],
 });
 </script>
 """
-        r=vbuild.VBuild("jo.vu",t)
+        r=vbuild.VBuild("jo.vue",t)
         self.assertEqual(str(r),rendered)
 
 class TestRenderFiles(unittest.TestCase):
@@ -833,6 +877,7 @@ class TestJSminOnline(unittest.TestCase):
             self.assertTrue(x)
         finally:
             vbuild.fullPyComp=default
+
 
 
 if __name__ == '__main__':
