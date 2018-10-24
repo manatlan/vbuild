@@ -1,3 +1,7 @@
+**0.7.4: 2018/10/24**
+- EVOL: vbuild generate es5 compliant code structure
+- EVOL: pycomponents manage more lifecycle events (+ "UPDATED","BEFOREUPDATE","BEFOREDESTROY","DESTROYED")
+
 **0.7.3: 2018/10/22**
 - EVOL: styles can contains mediaquery now
 - EVOL: repr(vbuild) return only needed tags

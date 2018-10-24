@@ -39,6 +39,9 @@ class Component:
     def CREATED(self):
         print("CREATED",self.name)
 
+    def UPDATED(self):
+        print("UPDATED",self.name)
+
     def MOUNTED(self):
         print("mounted",self.name,"in",self["$parent"]["$options"].name)
         self.inc()
@@ -102,8 +105,8 @@ self["$refs"].btnOk.click()
 self["$forceUpdate"]()
 ```
 
-### Lifecycle events : created & mounted
-Currently, there is only 2 lifecyles : but they are the most used IRL apps (But it's very easy to add more, what lifecycle methods do you want to use ??). Just create an uppercase method, with the name of the lifecyle. 
+### Lifecycle events
+Just create an uppercase method, with the name of the lifecyle ( "MOUNTED","CREATED","UPDATED","BEFOREUPDATE","BEFOREDESTROY","DESTROYED" )
 
 (see `def CREATED(self)` and `def MOUNTED(self)` ^^)
 
@@ -129,7 +132,6 @@ You can test that on [vbuild's demo](https://manatlan.alwaysdata.net/vbuild/) !
 
 ## TODO:
 
- * add more lifecycle events
  * ability to import things ?
  * use wrapper self._parent -> self["$parent"] ?
  * $store/vuex in python ? ($router/vue-router in python ?)   

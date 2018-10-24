@@ -7,7 +7,7 @@
 #
 # https://github.com/manatlan/vbuild
 # #############################################################################
-__version__="0.7.3"   #py2.7 & py3.5 !!!!
+__version__="0.7.4"   #py2.7 & py3.5 !!!!
 
 import re,os,json,glob,itertools,traceback,pscript,subprocess,pkgutil
 
@@ -332,7 +332,7 @@ def mkClassicVueComponent(name,template,code):
         else:
             raise Exception("Can't find valid content inside '{' and '}'")
 
-    return """var %s = Vue.component('%s', %s);""" % (name,name,js.replace("{","{template:`%s`," % template,1))
+    return """var %s = Vue.component('%s', %s);""" % (name,name,js.replace("{","{template:'%s'," % template,1))
 
 def mkPythonVueComponent(name,template,code,genStdLibMethods=True):
     """ Transpile the component 'name', which have the template 'template',
@@ -363,7 +363,7 @@ def mkPythonVueComponent(name,template,code,genStdLibMethods=True):
                         watchs.append('"%s": %s.prototype.%s,'%(varwatch,classname,oname))
                     else:
                         raise VBuildException("name='var_to_watch' is not specified in %s" % oname)
-                elif oname in ["MOUNTED","CREATED"]:
+                elif oname in ["MOUNTED","CREATED","UPDATED","BEFOREUPDATE","BEFOREDESTROY","DESTROYED"]:
                     lifecycles.append('%s: %s.prototype.%s,'%(oname.lower(),classname,oname))
                 else:
                     methods.append('%s: %s.prototype.%s,'%(oname,classname,oname))
@@ -391,10 +391,11 @@ var %(name)s=(function() {
     return Vue.component('%(name)s',{
         name: "%(name)s",
         props: %(props)s,
-        template: `%(template)s`,
+        template: '%(template)s',
         data: function() {
             var props=[]
-            for(var n of %(props)s) props.push( this.$props[n] )
+            var ll=%(props)s;
+            for(var i in ll) props.push( this.$props[ ll[i] ] )
             var i=construct(%(classname)s,props) // new %(classname)s(...props)
             return JSON.parse(JSON.stringify( i ));
         },

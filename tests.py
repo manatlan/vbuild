@@ -341,7 +341,7 @@ export default {
         self.assertFalse(":scope" in repr(r))
         self.assertTrue("<div data-name>" in repr(r))
         self.assertTrue('<script type="text/x-template" id="tpl-name">' in repr(r))
-        self.assertTrue("var name = Vue.component('name', {template:`#tpl-name`," in repr(r))
+        self.assertTrue("var name = Vue.component('name', {template:'#tpl-name'," in repr(r))
 
     def test_composant_complet_minify(self):
         h="""
@@ -398,7 +398,7 @@ export default {
         r=vbuild.VBuild("name.vue",h)
         self.assertTrue("<div data-name>" in str(r))
         self.assertTrue('<script type="text/x-template" id="tpl-name">' in str(r))
-        self.assertTrue("var name = Vue.component('name', {template:`#tpl-name`," in str(r))
+        self.assertTrue("var name = Vue.component('name', {template:'#tpl-name'," in str(r))
 
 
     def test_bad_composant_add(self):
@@ -412,8 +412,8 @@ export default {
         cc=sum([c,d])
         self.assertTrue(cc.html.count("<div data-c>XXX</div>")==1)
         self.assertTrue(cc.html.count("<div data-d>XXX</div>")==1)
-        self.assertTrue(cc.script.count("var c = Vue.component('c', {template:`#tpl-c`,});")==1)
-        self.assertTrue(cc.script.count("var d = Vue.component('d', {template:`#tpl-d`,});")==1)
+        self.assertTrue(cc.script.count("var c = Vue.component('c', {template:'#tpl-c',});")==1)
+        self.assertTrue(cc.script.count("var d = Vue.component('d', {template:'#tpl-d',});")==1)
 
     def test_pickable(self):    # so it's GAE memcach'able !
         h="""
@@ -439,7 +439,7 @@ export default {
 </script>
 """
         r=vbuild.VBuild("name.vue",h)
-        self.assertEqual(r.script,"""var name = Vue.component('name', {template:`#tpl-name`,\n    mounted() {}\n});""")
+        self.assertEqual(r.script,"""var name = Vue.component('name', {template:'#tpl-name',\n    mounted() {}\n});""")
 
     def test_sass(self):
         if not vbuild.hasSass: self.skipTest("Don't test sass (miss pyScss)")
@@ -526,7 +526,7 @@ h1 {color:blue}
     <hr>
 </div></script>
 <script>
-var jo = Vue.component('jo', {template:`#tpl-jo`,
+var jo = Vue.component('jo', {template:'#tpl-jo',
     props:["name"],
 });
 </script>
@@ -560,7 +560,7 @@ h1 {color:blue}
     <hr>
 </div></script>
 <script>
-var jo = Vue.component('jo', {template:`#tpl-jo`,
+var jo = Vue.component('jo', {template:'#tpl-jo',
     props:["name"],
 });
 </script>
@@ -669,7 +669,7 @@ class TestPy2Js(unittest.TestCase):
         self.assertTrue("_pyfunc_op_instantiate" in js)
         self.assertTrue("Vue.component('toto',{" in js)
         self.assertTrue('name: "toto",' in js)
-        self.assertTrue('template: `<div></div>`,' in js)
+        self.assertTrue("template: '<div></div>'," in js)
 
     def test_MOUNTED(self):
         c="""class Component:
@@ -732,7 +732,7 @@ class TestPy2Js(unittest.TestCase):
         self.assertTrue("_pyfunc_op_instantiate" in js)
         self.assertTrue("Vue.component(" in js)
         self.assertTrue("props: ['prop1', 'prop2']," in js)
-        self.assertTrue("for(var n of ['prop1', 'prop2']) props.push( this.$props[n] )" in js)
+        self.assertTrue("for(var i in ll) props.push( this.$props" in js)
         jsinit="""C.prototype.__init__ = function (prop1, prop2) {
     prop1 = (prop1 === undefined) ? "?": prop1;
     prop2 = (prop2 === undefined) ? "?": prop2;
