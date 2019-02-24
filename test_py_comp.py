@@ -1,7 +1,7 @@
 #!/usr/bin/python3
-import vbuild,os
+import vbuild, os
 
-cc="""
+cc = """
 <template>
     <div>
         {{name}} ({{originalName}})
@@ -46,7 +46,7 @@ class Component:
 </style>
 """
 
-cm="""
+cm = """
 <template>
     <div>
         {{id}} <button @click="change()"><- change</button>
@@ -68,19 +68,20 @@ class Component:
 
 """
 try:
-    vbuild.partial="$v: 12px;"
-    #~ vbuild.fullPyComp=False
+    vbuild.partial = "$v: 12px;"
+    # ~ vbuild.fullPyComp=False
 
-    dest=os.path.basename(__file__)[:-3]+".html"
+    dest = os.path.basename(__file__)[:-3] + ".html"
 
-    with open(dest,"w+") as fid:
-        v=vbuild.VBuild("comp.vue",cc)+vbuild.VBuild("mother.vue",cm)
-        html=v.html
-        style=v.style
+    with open(dest, "w+") as fid:
+        v = vbuild.VBuild("comp.vue", cc) + vbuild.VBuild("mother.vue", cm)
+        html = v.html
+        style = v.style
         # script=vbuild.jsmin(v.script)
-        script=v.script
-        
-        fid.write("""
+        script = v.script
+
+        fid.write(
+            """
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <style>%(style)s</style>
     %(html)s
@@ -89,8 +90,11 @@ try:
         <mother/>
     </div>
     <script>new Vue({el:"#app"})</script>    
-    """ % locals() )
+    """
+            % locals()
+        )
 
-    print("Generate html --> "+dest)
+    print("Generate html --> " + dest)
 finally:
-    vbuild.partial=""
+    vbuild.partial = ""
+
