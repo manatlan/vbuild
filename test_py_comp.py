@@ -67,28 +67,30 @@ class Component:
 </style>
 
 """
+try:
+    vbuild.partial="$v: 12px;"
+    #~ vbuild.fullPyComp=False
 
-vbuild.partial="$v: 12px;"
-#~ vbuild.fullPyComp=False
+    dest=os.path.basename(__file__)[:-3]+".html"
 
-dest=os.path.basename(__file__)[:-3]+".html"
+    with open(dest,"w+") as fid:
+        v=vbuild.VBuild("comp.vue",cc)+vbuild.VBuild("mother.vue",cm)
+        html=v.html
+        style=v.style
+        # script=vbuild.jsmin(v.script)
+        script=v.script
+        
+        fid.write("""
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <style>%(style)s</style>
+    %(html)s
+    <script>%(script)s</script>
+    <div id="app">
+        <mother/>
+    </div>
+    <script>new Vue({el:"#app"})</script>    
+    """ % locals() )
 
-with open(dest,"w+") as fid:
-    v=vbuild.VBuild("comp.vue",cc)+vbuild.VBuild("mother.vue",cm)
-    html=v.html
-    style=v.style
-    # script=vbuild.jsmin(v.script)
-    script=v.script
-    
-    fid.write("""
-<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-<style>%(style)s</style>
-%(html)s
-<script>%(script)s</script>
-<div id="app">
-    <mother/>
-</div>
-<script>new Vue({el:"#app"})</script>    
-""" % locals() )
-
-print("Generate html --> "+dest)
+    print("Generate html --> "+dest)
+finally:
+    vbuild.partial=""
