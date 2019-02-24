@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import vbuild
 import pytest
+import sys
 
 tu=u"""<template><div>français
     <a title='España'><span class="flags es"></span></a>
@@ -23,12 +24,13 @@ def test_unicode():
     r=vbuild.VBuild(u"x.vue",tu)
     assert type(tu) == type(r.html)
 
-#~ def test_str():
-    #~ r=vbuild.VBuild("x.vue",ts)
-    #~ assert type(ts) == type(r.html)
+@pytest.mark.skipif(sys.version_info < (3,0),reason="sass is bugged on py27")
+def test_str():
+    r=vbuild.VBuild("x.vue",ts)
+    assert type(ts) == type(r.html)
 
-    #~ r=vbuild.VBuild(u"x.vue",ts)
-    #~ assert type(ts) == type(r.html)
+    r=vbuild.VBuild(u"x.vue",ts)
+    assert type(ts) == type(r.html)
 
 def test_unicode2():
     r=vbuild.VBuild("xé.vue",tu)
