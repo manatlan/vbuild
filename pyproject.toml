@@ -21,6 +21,7 @@ pscript = "^0.7.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"
+pytest-cov = "^2.6"
 closure = "^20180204.0"
 pyscss = "^1.3"
 lesscpy = "^0.13.0"
