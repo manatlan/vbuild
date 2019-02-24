@@ -4,7 +4,6 @@ import pytest
 import sys
 
 
-@pytest.mark.skipif(sys.version_info < (3, 0), reason="sass is bugged on py27")
 @pytest.mark.skipif(not vbuild.hasSass, reason="requires pyScss")
 def test_sass():
     h = """<template><div>XXX</div></template>
