@@ -3,32 +3,35 @@ import vbuild
 import pytest
 import sys
 
-@pytest.mark.skipif(sys.version_info < (3,0),reason="sass is bugged on py27")
-@pytest.mark.skipif(not vbuild.hasSass,reason="requires pyScss")
+
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="sass is bugged on py27")
+@pytest.mark.skipif(not vbuild.hasSass, reason="requires pyScss")
 def test_sass():
-    h="""<template><div>XXX</div></template>
+    h = """<template><div>XXX</div></template>
     <Style scoped lang="sass">
     body {
         font: 2px *3;
         color: red + green;
     }
     </style>"""
-    r=vbuild.VBuild("comp.vue",h)
+    r = vbuild.VBuild("comp.vue", h)
     assert "6px" in r.style
     assert "#ff8000" in r.style
 
-    h="""<template><div>XXX</div></template>
+    h = """<template><div>XXX</div></template>
     <Style scoped lang="sass">
     body {
         font: $unknown;
     }
     </style>"""
-    r=vbuild.VBuild("comp.vue",h)
-    with pytest.raises(vbuild.VBuildException):     # vbuild.VBuildException: Component 'comp.vue' got a CSS-PreProcessor trouble : Error evaluating expression:
+    r = vbuild.VBuild("comp.vue", h)
+    with pytest.raises(
+        vbuild.VBuildException
+    ):  # vbuild.VBuildException: Component 'comp.vue' got a CSS-PreProcessor trouble : Error evaluating expression:
         r.style
 
     # ensure inline def class are OK
-    h="""<template><div>XXX</div></template>
+    h = """<template><div>XXX</div></template>
     <Style scoped lang="sass">
     :scope {
         color:blue;
@@ -36,6 +39,7 @@ def test_sass():
         div {color:red}
     }
     </style>"""
-    r=vbuild.VBuild("comp.vue",h)
-    assert r.style == """*[data-comp] {color: blue; }\n*[data-comp] div {color: red; }"""
-
+    r = vbuild.VBuild("comp.vue", h)
+    assert (
+        r.style == """*[data-comp] {color: blue; }\n*[data-comp] div {color: red; }"""
+    )

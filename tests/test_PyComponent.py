@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import vbuild
 import pytest
+
 """ urgghh ... minimal tests here ;-) """
 
+
 def test_ok():
-    c="""<template>
+    c = """<template>
     <div>
         {{name}} {{cpt}}
         <button @click="inc()">++</button>
@@ -23,12 +25,13 @@ class Component:
 <style scoped>
     :scope {background:#EEE}
 </style>"""
-    r=vbuild.VBuild("pyc.vue",c)
+    r = vbuild.VBuild("pyc.vue", c)
     assert "_pyfunc_op_instantiate" in r.script
     assert "Vue.component(" in r.script
 
+
 def test_ko_syntax():
-    c="""<template>
+    c = """<template>
     <div>
         {{name}} {{cpt}}
         <button @click="inc()">++</button>
@@ -47,11 +50,12 @@ class Component:
 <style scoped>
     :scope {background:#EEE}
 </style>"""
-    with pytest.raises(vbuild.VBuildException): # Python Component 'pyc.vue' is broken
-        vbuild.VBuild("pyc.vue",c)
+    with pytest.raises(vbuild.VBuildException):  # Python Component 'pyc.vue' is broken
+        vbuild.VBuild("pyc.vue", c)
+
 
 def test_ko_semantic():
-    c="""<template>
+    c = """<template>
     <div>
         {{name}} {{cpt}}
         <button @click="inc()">++</button>
@@ -70,5 +74,7 @@ class ComponentV0:                  # bad class name
 <style scoped>
     :scope {background:#EEE}
 </style>"""
-    with pytest.raises(vbuild.VBuildException): # Component pyc.vue contains a bad script
-        vbuild.VBuild("pyc.vue",c)
+    with pytest.raises(
+        vbuild.VBuildException
+    ):  # Component pyc.vue contains a bad script
+        vbuild.VBuild("pyc.vue", c)

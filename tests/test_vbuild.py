@@ -2,41 +2,48 @@
 import vbuild
 import pytest
 
+
 def test_names():
-    h="""<template><div>XXX</div></template>"""
-    assert vbuild.VBuild("mycomp.vue",h).tags[0] == "mycomp"
-    assert vbuild.VBuild("jo/mycomp.vue",h).tags[0] == "mycomp"
-    assert vbuild.VBuild("jo/mycomp.vuec",h).tags[0] == "mycomp"
-    assert vbuild.VBuild("jo/mycomp.vu",h).tags[0] == "mycomp"
-    assert vbuild.VBuild("jo/mycomp",h).tags[0] == "mycomp"
+    h = """<template><div>XXX</div></template>"""
+    assert vbuild.VBuild("mycomp.vue", h).tags[0] == "mycomp"
+    assert vbuild.VBuild("jo/mycomp.vue", h).tags[0] == "mycomp"
+    assert vbuild.VBuild("jo/mycomp.vuec", h).tags[0] == "mycomp"
+    assert vbuild.VBuild("jo/mycomp.vu", h).tags[0] == "mycomp"
+    assert vbuild.VBuild("jo/mycomp", h).tags[0] == "mycomp"
     with pytest.raises(vbuild.VBuildException):
-        r=vbuild.VBuild("",h) # Component %s should be named
+        r = vbuild.VBuild("", h)  # Component %s should be named
     with pytest.raises(vbuild.VBuildException):
-        r=vbuild.VBuild(None,h) # Component %s should be named
+        r = vbuild.VBuild(None, h)  # Component %s should be named
 
 
 def test_bad_more_than_one_root():
-    h="""<template type="xxx"> <div>XXX</div> <div>XXX</div> </template>"""
+    h = """<template type="xxx"> <div>XXX</div> <div>XXX</div> </template>"""
     with pytest.raises(vbuild.VBuildException):
-        r=vbuild.VBuild("mycomp.vue",h) # Component mycomp.vue can have only one top level tag
+        r = vbuild.VBuild(
+            "mycomp.vue", h
+        )  # Component mycomp.vue can have only one top level tag
+
 
 def test_bad_no_template():
-    h="""<templite type="xxx"> <div>XXX</div> <div>XXX</div> </templite>"""
+    h = """<templite type="xxx"> <div>XXX</div> <div>XXX</div> </templite>"""
     with pytest.raises(vbuild.VBuildException):
-        r=vbuild.VBuild("comp.vue",h)   # Component comp.vue doesn't have a template
+        r = vbuild.VBuild("comp.vue", h)  # Component comp.vue doesn't have a template
+
 
 def test_bad_script_bad():
-    h="""<template> <div>XXX</div></template><script> gdsf gfds </script>"""
+    h = """<template> <div>XXX</div></template><script> gdsf gfds </script>"""
     with pytest.raises(vbuild.VBuildException):
-        r=vbuild.VBuild("comp.vue",h)   # Component %s contains a bad script
+        r = vbuild.VBuild("comp.vue", h)  # Component %s contains a bad script
+
 
 def test_bad_script_not_closed():
-    h="""<template> <div>XXX</div></template><script> gdsf gfds """
-    r=vbuild.VBuild("comp.vue",h)   # Component %s contains a bad script
+    h = """<template> <div>XXX</div></template><script> gdsf gfds """
+    r = vbuild.VBuild("comp.vue", h)  # Component %s contains a bad script
     assert r.script
 
-def test_composant_complet( ):
-    h="""
+
+def test_composant_complet():
+    h = """
 <template>
   <div>
     {{c}} <button @click="inc">++</button>
@@ -65,10 +72,10 @@ export default {
   button {background:black}
 </style>
 """
-    r=vbuild.VBuild("name.vue",h)
-    assert r.tags==["name"]
-    assert r.style.count("*[data-name]")==2
-    assert r.style.count("background")==3
+    r = vbuild.VBuild("name.vue", h)
+    assert r.tags == ["name"]
+    assert r.style.count("*[data-name]") == 2
+    assert r.style.count("background") == 3
 
     assert ":scope" not in repr(r)
     assert "<div data-name>" in repr(r)
@@ -77,7 +84,7 @@ export default {
 
 
 def test_composant_complet_trans():
-    h="""
+    h = """
 <template>
   <div>
     {{c}} <button @click="inc">++</button>
@@ -106,63 +113,67 @@ export default {
   button {background:black}
 </style>
 """
-    oh=vbuild.transHtml
-    oj=vbuild.transScript
-    oc=vbuild.transStyle
+    oh = vbuild.transHtml
+    oj = vbuild.transScript
+    oc = vbuild.transStyle
     try:
-        vbuild.transHtml=lambda x:"h"
-        vbuild.transScript=lambda x:"j"
-        vbuild.transStyle=lambda x:"c"
-        r=vbuild.VBuild("name.vue",h)
-        assert r.html,'<script type="text/x-template" id="tpl-name">h</script>'
-        assert r.script,"j"
-        assert r.style,"c"
+        vbuild.transHtml = lambda x: "h"
+        vbuild.transScript = lambda x: "j"
+        vbuild.transStyle = lambda x: "c"
+        r = vbuild.VBuild("name.vue", h)
+        assert r.html, '<script type="text/x-template" id="tpl-name">h</script>'
+        assert r.script, "j"
+        assert r.style, "c"
     finally:
-        vbuild.transHtml=oh
-        vbuild.transScript=oj
-        vbuild.transStyle=oc
+        vbuild.transHtml = oh
+        vbuild.transScript = oj
+        vbuild.transStyle = oc
+
 
 def test_composant_min():
-    h="""
+    h = """
 <template>
   <div>Load</div>
 </template>
 """
-    r=vbuild.VBuild("name.vue",h)
+    r = vbuild.VBuild("name.vue", h)
     assert "<div data-name>" in str(r)
     assert '<script type="text/x-template" id="tpl-name">' in str(r)
     assert "var name = Vue.component('name', {template:'#tpl-name'," in str(r)
 
 
 def test_bad_composant_add():
-    c=vbuild.VBuild("c.vue","""<template><div>XXX</div></template>""")
+    c = vbuild.VBuild("c.vue", """<template><div>XXX</div></template>""")
     with pytest.raises(vbuild.VBuildException):
-        cc=sum([c,c]) # You can't have multiple set(['c'])
+        cc = sum([c, c])  # You can't have multiple set(['c'])
+
 
 def test_composant_add():
-    c=vbuild.VBuild("c.vue","""<template><div>XXX</div></template>""")
-    d=vbuild.VBuild("d.vue","""<template><div>XXX</div></template>""")
-    cc=sum([c,d])
-    assert cc.html.count("<div data-c>XXX</div>")==1
-    assert cc.html.count("<div data-d>XXX</div>")==1
-    assert cc.script.count("var c = Vue.component('c', {template:'#tpl-c',});")==1
-    assert cc.script.count("var d = Vue.component('d', {template:'#tpl-d',});")==1
+    c = vbuild.VBuild("c.vue", """<template><div>XXX</div></template>""")
+    d = vbuild.VBuild("d.vue", """<template><div>XXX</div></template>""")
+    cc = sum([c, d])
+    assert cc.html.count("<div data-c>XXX</div>") == 1
+    assert cc.html.count("<div data-d>XXX</div>") == 1
+    assert cc.script.count("var c = Vue.component('c', {template:'#tpl-c',});") == 1
+    assert cc.script.count("var d = Vue.component('d', {template:'#tpl-d',});") == 1
 
 
-def test_pickable():    # so it's GAE memcach'able !
-    h="""
+def test_pickable():  # so it's GAE memcach'able !
+    h = """
 <template>
   <div>Load</div>
 </template>
 """
     import pickle
-    r=vbuild.VBuild("name.vue",h)
+
+    r = vbuild.VBuild("name.vue", h)
     f_string = pickle.dumps(r)
     f_new = pickle.loads(f_string)
-    assert str(r)==str(f_new)
+    assert str(r) == str(f_new)
 
-def test_script_good():    # so it's GAE memcach'able !
-    h="""
+
+def test_script_good():  # so it's GAE memcach'able !
+    h = """
 <template>
   <div>Load</div>
 </template>
@@ -172,14 +183,15 @@ export default {
 }
 </script>
 """
-    r=vbuild.VBuild("name.vue",h)
-    assert r.script=="""var name = Vue.component('name', {template:'#tpl-name',\n    mounted() {}\n});"""
-
-
+    r = vbuild.VBuild("name.vue", h)
+    assert (
+        r.script
+        == """var name = Vue.component('name', {template:'#tpl-name',\n    mounted() {}\n});"""
+    )
 
 
 def testVoidElements():
-    t="""<template>
+    t = """<template>
 <div>
     <hr>
     hello {{name}}<br>
@@ -195,7 +207,7 @@ export defailt {
 }
 </script>
     """
-    rendered="""<style>
+    rendered = """<style>
 h1 {color:blue}
 </style>
 <script type="text/x-template" id="tpl-jo"><div data-jo>
@@ -209,11 +221,12 @@ var jo = Vue.component('jo', {template:'#tpl-jo',
 });
 </script>
 """
-    r=vbuild.VBuild("jo.vue",t)
-    assert str(r)==rendered
+    r = vbuild.VBuild("jo.vue", t)
+    assert str(r) == rendered
+
 
 def testVoidElements_closed():
-    t="""<template>
+    t = """<template>
 <div>
     <hr/>
     hello {{name}}<br/>
@@ -229,7 +242,7 @@ export defailt {
 }
 </script>
     """
-    rendered="""<style>
+    rendered = """<style>
 h1 {color:blue}
 </style>
 <script type="text/x-template" id="tpl-jo"><div data-jo>
@@ -243,5 +256,5 @@ var jo = Vue.component('jo', {template:'#tpl-jo',
 });
 </script>
 """
-    r=vbuild.VBuild("jo.vue",t)
-    assert str(r)==rendered
+    r = vbuild.VBuild("jo.vue", t)
+    assert str(r) == rendered

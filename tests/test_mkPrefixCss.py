@@ -2,15 +2,18 @@
 import vbuild
 import pytest
 
+
 def test_css1():
-    assert vbuild.mkPrefixCss("","XXX")==""
+    assert vbuild.mkPrefixCss("", "XXX") == ""
+
 
 def test_css2():
-    assert vbuild.mkPrefixCss("   a    {color}  ")==      "a {color}"
-    assert vbuild.mkPrefixCss("   a    {color}  ","XXX")=="XXX a {color}"
+    assert vbuild.mkPrefixCss("   a    {color}  ") == "a {color}"
+    assert vbuild.mkPrefixCss("   a    {color}  ", "XXX") == "XXX a {color}"
+
 
 def test_cssTop():
-    t="""
+    t = """
 :scope
 {padding:4px;background: yellow}
 
@@ -22,18 +25,18 @@ color:red;}
 p > a, p>i { /*nib*/ }
 
 """
-    ok="""
+    ok = """
 XXX {padding:4px;background: yellow}
 XXX button[ name ] {background:red }
 XXX hr *, XXX body:hover {color:red;}
 XXX p > a, XXX p>i {}
 """
-    tt=vbuild.mkPrefixCss(t,"XXX")
-    assert tt==ok.strip()
+    tt = vbuild.mkPrefixCss(t, "XXX")
+    assert tt == ok.strip()
 
 
 def test_mediaquery_noprefix():
-    t="""
+    t = """
     :scope {color:green}
     @media (max-width: 700px) {
         button {color:red}
@@ -41,16 +44,16 @@ def test_mediaquery_noprefix():
     }
     button2 {color:yellow}
     """
-    r=""":scope {color:green}
+    r = """:scope {color:green}
 button2 {color:yellow}
 @media (max-width: 700px) {button {color:red}
 body {color:green}}"""
-    x=vbuild.mkPrefixCss(t)
-    assert x==r
+    x = vbuild.mkPrefixCss(t)
+    assert x == r
 
 
 def test_mediaquery_prefix():
-    t="""
+    t = """
     :scope {color:green}
     @media (max-width: 700px) {
         button {color:red}
@@ -58,8 +61,8 @@ def test_mediaquery_prefix():
     }
     button2 {color:yellow}
     """
-    r="""XXX {color:green}
+    r = """XXX {color:green}
 XXX button2 {color:yellow}
 @media (max-width: 700px) {XXX button {color:red}\nXXX body {color:green}}"""
-    x=vbuild.mkPrefixCss(t,"XXX")
-    assert x==r
+    x = vbuild.mkPrefixCss(t, "XXX")
+    assert x == r

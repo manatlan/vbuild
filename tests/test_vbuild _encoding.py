@@ -3,12 +3,12 @@ import vbuild
 import pytest
 import sys
 
-tu=u"""<template><div>français
+tu = u"""<template><div>français
     <a title='España'><span class="flags es"></span></a>
     <a title='中国'><span class="flags cn"></span></a>
 </div></template>"""
 
-ts="""<template><div>français
+ts = """<template><div>français
     <a title='España'><span class="flags es"></span></a>
     <a title='中国'><span class="flags cn"></span></a>
 </div></template>"""
@@ -17,33 +17,38 @@ ts="""<template><div>français
     (mainly for py2, no trouble with py3)
 """
 
+
 def test_unicode():
-    r=vbuild.VBuild("x.vue",tu)
+    r = vbuild.VBuild("x.vue", tu)
     assert type(tu) == type(r.html)
 
-    r=vbuild.VBuild(u"x.vue",tu)
+    r = vbuild.VBuild(u"x.vue", tu)
     assert type(tu) == type(r.html)
 
-@pytest.mark.skipif(sys.version_info < (3,0),reason="sass is bugged on py27")
+
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="sass is bugged on py27")
 def test_str():
-    r=vbuild.VBuild("x.vue",ts)
+    r = vbuild.VBuild("x.vue", ts)
     assert type(ts) == type(r.html)
 
-    r=vbuild.VBuild(u"x.vue",ts)
+    r = vbuild.VBuild(u"x.vue", ts)
     assert type(ts) == type(r.html)
+
 
 def test_unicode2():
-    r=vbuild.VBuild("xé.vue",tu)
+    r = vbuild.VBuild("xé.vue", tu)
     assert type(tu) == type(r.html)
 
-    r=vbuild.VBuild(u"xé.vue",tu)
+    r = vbuild.VBuild(u"xé.vue", tu)
     assert type(tu) == type(r.html)
+
 
 def test_str2():
-    r=vbuild.VBuild("xé.vue",ts)
+    r = vbuild.VBuild("xé.vue", ts)
     assert type(ts) == type(r.html)
 
-    r=vbuild.VBuild(u"xé.vue",ts)
+    r = vbuild.VBuild(u"xé.vue", ts)
     assert type(ts) == type(r.html)
 
-#~ test_str()
+
+# ~ test_str()
