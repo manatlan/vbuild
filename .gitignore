@@ -1,6 +1,6 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-vues/
+pip-wheel-metadata/
 *.py[cod]
 *$py.class
 *.html
