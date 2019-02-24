@@ -7,13 +7,13 @@
 #
 # https://github.com/manatlan/vbuild
 # #############################################################################
-__version__="0.7.4"   #py2.7 & py3.5 !!!!
+__version__="0.8.0"   #py2.7 & py3.5 !!!!
 
 import re,os,json,glob,itertools,traceback,pscript,subprocess,pkgutil
 
 try:
     from HTMLParser import HTMLParser
-    import urllib2 as urlrequest    
+    import urllib2 as urlrequest
     import urllib as urlparse
 except ImportError:
     from html.parser import HTMLParser
@@ -74,7 +74,7 @@ def jsmin(code): # need java & pip/closure
         import closure  # py2 or py3
     else:
         raise VBuildException("jsmin error: closure is not installed (sudo pip closure)")
-    cmd = ["java", "-jar", closure.get_jar_filename()] 
+    cmd = ["java", "-jar", closure.get_jar_filename()]
     try:
         p = subprocess.Popen(cmd,stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
     except Exception as e:
@@ -91,8 +91,8 @@ def preProcessCSS(cnt,partial=""):
     """
     if cnt.type in ["scss","sass"]:
         if hasSass:
-            from scss.compiler import compile_string   #lang="scss" 
-            return compile_string(partial+"\n"+cnt.value) 
+            from scss.compiler import compile_string   #lang="scss"
+            return compile_string(partial+"\n"+cnt.value)
         else:
             print("***WARNING*** : miss 'sass' preprocessor : sudo pip install pyscss")
             return cnt.value
@@ -115,7 +115,7 @@ class Content:
 
 class VueParser(HTMLParser):
     """ Just a class to extract <template/><script/><style/> from a buffer.
-        self.html/script/styles/scopedStyles are Content's object, or list of. 
+        self.html/script/styles/scopedStyles are Content's object, or list of.
     """
     voidElements="area base br col command embed hr img input keygen link menuitem meta param source track wbr".split(" ")
     def __init__(self,buf,name=""):
@@ -131,14 +131,14 @@ class VueParser(HTMLParser):
         self.rootTag=None
         self.html,self.script,self.styles,self.scopedStyles=None,None,[],[]
         self.feed(buf.strip("\n\r\t "))
-    
+
     def handle_starttag(self, tag, attrs):
         self._tag=tag
-        
+
         # don't manage if it's a void element
-        if tag not in self.voidElements: 
+        if tag not in self.voidElements:
             self._level+=1
-            
+
             attributes=dict([(k.lower(),v and v.lower()) for k,v in attrs])
             if tag=="style" and attributes.get("lang",None):
                 self._styleLang= attributes["lang"]
@@ -152,26 +152,26 @@ class VueParser(HTMLParser):
                 self.rootTag = tag
 
     def handle_endtag(self, tag):
-        if tag not in self.voidElements: 
+        if tag not in self.voidElements:
             if tag=="template" and self._p1: # don't watch the level (so it can accept mal formed html
                 self.html=Content(self.rawdata[self._p1:self.getOffset()])
             self._level-=1
-        
+
     def handle_data(self, data):
         if self._level==1:
             if self._tag=="script": self.script=Content(data,self._scriptLang)
-            if self._tag=="style": 
+            if self._tag=="style":
                 if "scoped" in self.get_starttag_text().lower():
                     self.scopedStyles.append( Content(data,self._styleLang) )
                 else:
                     self.styles.append( Content(data,self._styleLang))
-                    
+
     def getOffset(self):
         lineno, off = self.getpos()
         rtn = 0
         for _ in range(lineno - 1):
             rtn = self.rawdata.find('\n', rtn) + 1
-        return rtn + off        
+        return rtn + off
 
 def mkPrefixCss(css,prefix=""):
     """Add the prexix (css selector) to all rules in the 'css'
@@ -190,7 +190,7 @@ def mkPrefixCss(css,prefix=""):
         mediacss=block[ block.find("{")+1:block.rfind("}") ].strip()
         css=css.replace(block,"")
         medias.append( (mediadef,mkPrefixCss(mediacss,prefix)))
-        
+
     lines=[]
     css=re.sub(re.compile("/\*.*?\*/",re.DOTALL ) ,"" ,css)
     css=re.sub(re.compile("[ \t\n]+",re.DOTALL ) ," " ,css)
@@ -221,10 +221,10 @@ class VBuild:
         if not filename:
             raise VBuildException("Component %s should be named" % filename)
 
-        if type(content)!=type(filename):           # only py2, transform 
+        if type(content)!=type(filename):           # only py2, transform
             if type(content)==unicode:              # filename to the same type
                 filename=filename.decode("utf8")    # of content to avoid
-            else:                                   # troubles with implicit 
+            else:                                   # troubles with implicit
                 filename=filename.encode("utf8")    # ascii conversions (regex)
 
         name=os.path.splitext(os.path.basename(filename))[0]
@@ -243,13 +243,13 @@ class VBuild:
             self.tags=[name]
             # self.html="""<script type="text/x-template" id="%s">%s</script>""" % (tplId, transHtml(html) )
             self._html=[(tplId,html)]
-            
+
             self._styles=[]
             for style in vp.styles:
                 self._styles.append( ("", style, filename) )
             for style in vp.scopedStyles:
                 self._styles.append( ("*[%s]" % dataId, style, filename) )
-                
+
             # and set self._script !
             if vp.script and ("class Component:" in vp.script.value):
                 ######################################################### python
@@ -262,7 +262,7 @@ class VBuild:
                 try:
                     self._script=[mkClassicVueComponent(name,'#'+tplId,vp.script and vp.script.value)]
                 except Exception as e:
-                    raise VBuildException("JS Component %s contains a bad script" % filename)                    
+                    raise VBuildException("JS Component %s contains a bad script" % filename)
 
 
     @property
@@ -284,7 +284,7 @@ class VBuild:
             return transScript(pscript.get_full_std_lib()+"\n"+js)
         else:
             return transScript(js)
-            
+
     @property
     def style(self):
         """ Return CSS (styles of embbeded components), after preprocess css & transStyle"""
@@ -295,7 +295,7 @@ class VBuild:
         except Exception as e:
             raise VBuildException("Component '%s' got a CSS-PreProcessor trouble : %s" % (filename,e))
         return transStyle(style).strip()
-    
+
     def __add__(self,o):
         same=set(self.tags).intersection(set(o.tags))
         if same: raise VBuildException("You can't have multiple '%s'" % list(same)[0])
@@ -338,7 +338,7 @@ def mkPythonVueComponent(name,template,code,genStdLibMethods=True):
     """ Transpile the component 'name', which have the template 'template',
         and the code 'code' (which should contains a valid Component class)
         to a valid Vue.component js statement.
-        
+
         genStdLibMethods : generate own std lib method inline (with the js)
                 (if False: use pscript.get_full_std_lib() to get them)
     """
