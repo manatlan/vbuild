@@ -1,3 +1,6 @@
+**0.8.0: 2019/02/24**
+- EVOL: new build chain : poetry/pytest/tox & black
+
 **0.7.4: 2018/10/24**
 - EVOL: vbuild generate es5 compliant code structure
 - EVOL: pycomponents manage more lifecycle events (+ "UPDATED","BEFOREUPDATE","BEFOREDESTROY","DESTROYED")
