@@ -7,9 +7,9 @@
 #
 # https://github.com/manatlan/vbuild
 # #############################################################################
-__version__ = "0.8.0"  # py2.7 & py3.5 !!!!
+__version__ = "0.8.1"  # py2.7 & py3.5 !!!!
 
-import re, os, json, glob, itertools, traceback, pscript, subprocess, pkgutil
+import re, os, json, glob, itertools, traceback, subprocess, pkgutil
 
 try:
     from HTMLParser import HTMLParser
@@ -268,7 +268,7 @@ class VBuild:
 
         name = os.path.splitext(os.path.basename(filename))[0]
 
-        unique = filename[:-4].replace("/", "-").replace("\\", "-").replace(":", "-")
+        unique = filename[:-4].replace("/", "-").replace("\\", "-").replace(":", "-").replace(".", "-")
         # unique = name+"-"+''.join(random.choice(string.letters + string.digits) for _ in range(8))
         tplId = "tpl-" + unique
         dataId = "data-" + unique
@@ -335,6 +335,7 @@ class VBuild:
         isLibInside = "var _pyfunc_op_instantiate" in js
 
         if (fullPyComp is False) and isPyComp and not isLibInside:
+            import pscript
             return transScript(pscript.get_full_std_lib() + "\n" + js)
         else:
             return transScript(js)
@@ -412,6 +413,7 @@ def mkPythonVueComponent(name, template, code, genStdLibMethods=True):
         genStdLibMethods : generate own std lib method inline (with the js)
                 (if False: use pscript.get_full_std_lib() to get them)
     """
+    import pscript
     code = code.replace(
         "class Component:", "class C:"
     )  # minimize class name (todo: use py2js option for that)

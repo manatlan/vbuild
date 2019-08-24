@@ -1,3 +1,7 @@
+**0.8.1: 2019/08/24**
+- EVOL: unique identifier, replace "." -> "_" to
+- EVOL: module pscript is only needed for pyComponents now !
+
 **0.8.0: 2019/02/24**
 - EVOL: new build chain : poetry/pytest/tox & black
 
