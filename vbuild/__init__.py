@@ -7,7 +7,7 @@
 #
 # https://github.com/manatlan/vbuild
 # #############################################################################
-__version__ = "0.8.1"  # py2.7 & py3.5 !!!!
+__version__ = "0.0.0" # auto-updated
 
 import re, os, json, glob, itertools, traceback, subprocess, pkgutil
 
