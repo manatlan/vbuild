@@ -2,6 +2,9 @@
 
 [![Test](https://github.com/manatlan/vbuild/actions/workflows/on_commit_do_all_unittests.yml/badge.svg)](https://github.com/manatlan/vbuild/actions/workflows/on_commit_do_all_unittests.yml)
 
+<a href="https://pypi.org/project/vbuild/">
+    <img src="https://badge.fury.io/py/vbuild" alt="Package version">
+</a>
 
 "Compile" your [VueJS](https://vuejs.org/) components (*.vue) to standalone html/js/css ... python only, **no need of nodejs**. And you can use [python components](https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md) with **vbuild**, in your vue/sfc files !!!
 
