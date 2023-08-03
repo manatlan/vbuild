@@ -1,4 +1,4 @@
-name: just for test
+ name: just for test
 
 on:
   workflow_dispatch:
@@ -20,8 +20,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-          python -m pip install --upgrade pip poetry pytest
+          python -m pip install -U pip poetry pytest
           poetry install --with dev
     - name: Test with pytest
       run: |
-        pytest .
+        poetry run pytest
