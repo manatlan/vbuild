@@ -4,32 +4,6 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build dist for pypi",
-            "type": "shell",
-            "command": [
-                    "poetry build",
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": [],
-            "presentation": {
-                "panel": "new",
-                "focus": true
-            }            
-        },
-        {
-            "label": "upload to pypi",
-            "type": "shell",
-            "command": "poetry publish",
-            "problemMatcher": [],
-            "presentation": {
-                "panel": "new",
-                "focus": true
-            }
-        },
-        {
             "label": "Tests py2 & py3",
             "type": "shell",
             "command": "tox",
