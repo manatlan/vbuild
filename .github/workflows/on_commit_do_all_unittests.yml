@@ -28,4 +28,4 @@ jobs:
           poetry install --with dev
     - name: Test with pytest
       run: |
-        pytest .
+        poetry run pytest
