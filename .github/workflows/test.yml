@@ -25,5 +25,5 @@ jobs:
       - name: poetry run pytest
         run: | 
             poetry lock
-            poetry install --with dev
+            #poetry install --with dev
             poetry run pytest
