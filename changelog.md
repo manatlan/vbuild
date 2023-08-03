@@ -1,3 +1,6 @@
+**0.8.2: 2023/08/03**
+- FIX #10 with [PR](https://github.com/manatlan/vbuild/pull/9)
+
 **0.8.1: 2019/08/24**
 - EVOL: unique identifier, replace "." -> "_" to
 - EVOL: module pscript is only needed for pyComponents now !
