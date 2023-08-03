@@ -227,8 +227,8 @@ def mkPrefixCss(css, prefix=""):
         medias.append((mediadef, mkPrefixCss(mediacss, prefix)))
 
     lines = []
-    css = re.sub(re.compile("/\*.*?\*/", re.DOTALL), "", css)
-    css = re.sub(re.compile("[ \t\n]+", re.DOTALL), " ", css)
+    css = re.sub(re.compile(r"/\*.*?\*/", re.DOTALL), "", css)
+    css = re.sub(re.compile(r"[ \t\n]+", re.DOTALL), " ", css)
     for rule in re.findall(r"[^}]+{[^}]+}", css):
         sels, decs = rule.split("{", 1)
         if prefix:
