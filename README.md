@@ -18,7 +18,7 @@ It's just an utility to [generate](https://github.com/manatlan/vbuild/blob/maste
 
 ## Features
 
- * **NO node-js stack**, only pure python (py2 or py3 compliant)
+ * **NO node-js stack**, only pure python (py2 or py3 compliant) **py2.7 is DEPRECATED** 
  * Ability to use [python components](https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md)
  * Components can be styled with [SASS or LESS ccs-pre-processors](https://github.com/manatlan/vbuild/blob/master/doc/CssPreProcess.md) !
  * Provide a [JS-minifier (ES5 compliant JS, via closure)](https://github.com/manatlan/vbuild/blob/master/doc/minimize.md)
