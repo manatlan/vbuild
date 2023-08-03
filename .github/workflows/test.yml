@@ -24,5 +24,6 @@ jobs:
           poetry-version: ${{ matrix.poetry-version }}
       - name: poetry run pytest
         run: | 
+            poetry lock
             poetry install --with dev
             poetry run pytest
