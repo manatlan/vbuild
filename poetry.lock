@@ -438,4 +438,4 @@ testing = ["func-timeout", "jaraco.itertools", "pathlib2", "unittest2"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^2.7 || ^3.6"
-content-hash = "3ab8c5dd32cd4bf96bd6ff8cfeb2a866b2d57c49e0a400d5d2d09cc22435730a"
+content-hash = "649a7a8f1655f2abc2e9b7c0af22d4da24d20ed05f12094d79515a383b782294"
