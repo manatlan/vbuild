@@ -1,4 +1,4 @@
- name: just for test
+name: just for test
 
 on:
   workflow_dispatch:
