@@ -14,7 +14,7 @@ It's just an utility to [generate](https://github.com/manatlan/vbuild/blob/maste
 
 [Available on pypi](https://pypi.org/project/vbuild/)
 
-[Changelog](https://github.com/manatlan/vbuild/blob/master/changelog.md)
+(Changelog)[https://github.com/manatlan/vbuild/releases] (old [Changelog](https://github.com/manatlan/vbuild/blob/master/changelog.md) (before 0.8.2))
 
 ## Features
 
