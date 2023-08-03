@@ -18,7 +18,7 @@ It's just an utility to [generate](https://github.com/manatlan/vbuild/blob/maste
 
 ## Features
 
- * **NO node-js stack**, only pure python (py2 or py3 compliant) **py2.7 is DEPRECATED** 
+ * **NO node-js stack**, only pure python3
  * Ability to use [python components](https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md)
  * Components can be styled with [SASS or LESS ccs-pre-processors](https://github.com/manatlan/vbuild/blob/master/doc/CssPreProcess.md) !
  * Provide a [JS-minifier (ES5 compliant JS, via closure)](https://github.com/manatlan/vbuild/blob/master/doc/minimize.md)
@@ -26,8 +26,8 @@ It's just an utility to [generate](https://github.com/manatlan/vbuild/blob/maste
  * Respect [VueJs specs](https://vue-loader.vuejs.org/spec.html) (at least one template tag, many style (scoped or not) tags)
  * `templates` are converted to a `<script type="text/x-template" id="XXX"></script>` (not converted to JS)
  * Unittested (coverage 100%)
- * no import/from ! 
- 
+ * no import/from !
+
 
 ```python
 import vbuild
@@ -41,7 +41,7 @@ print( c.html )
 print( c.script )
 print( c.style )
 
-#or 
+#or
 
 print( c ) # all stuff in html tags
 
@@ -63,7 +63,7 @@ writeYourTemplate("index.html",buf)
 
 ## Vue/sfc component compatibility
 
-All classical JS vue/sfc components are compatibles. But now, you can use [python component](https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md) too. 
+All classical JS vue/sfc components are compatibles. But now, you can use [python component](https://github.com/manatlan/vbuild/blob/master/doc/PyComponent.md) too.
 
 Here is, side by side, the same component (in js, and in python):
 
@@ -77,7 +77,7 @@ If you want to use the full features, you'll need to install the optionnal's lib
 sudo pip install pyscss lesscpy closure
 ```
 
-All theses libs works with py2 and/or py3, and you could use the [css-pre-processors SASS and LESS](https://github.com/manatlan/vbuild/blob/master/doc/CssPreProcess.md), and [closure to minify js](https://github.com/manatlan/vbuild/blob/master/doc/minimize.md).
+All theses libs works with py3, and you could use the [css-pre-processors SASS and LESS](https://github.com/manatlan/vbuild/blob/master/doc/CssPreProcess.md), and [closure to minify js](https://github.com/manatlan/vbuild/blob/master/doc/minimize.md).
 
 ## TODO
 

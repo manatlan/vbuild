@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "vbuild"
 version = "0.0.0" # auto-updated
-description = "A simple module to extract html/script/style from a vuejs '.vue' file (can minimize/es2015 compliant js) ... just py2 or py3, NO nodejs !"
+description = "A simple module to extract html/script/style from a vuejs '.vue' file (can minimize/es2015 compliant js) ... just python3, NO nodejs !"
 authors = ["manatlan <manatlan@gmail.com>"]
 #include = ["LICENSE"]
 readme = 'README.md'
@@ -16,19 +16,16 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^2.7 || ^3.6"
-pscript = "^0.7.0"
+python = "^3.7"
+pscript = "^0.7.7"
 
 [tool.poetry.dev-dependencies]
-pytest = ">=3.7,<4.0"
-pytest-cov = "^2.6"
-closure = "^20180204.0"
-pyscss = "^1.3"
-lesscpy = "^0.13.0"
-pathlib = { version = "^1.0", python = "~2.7" }         # for py27/pyscss
-enum-compat = { version = "^0.0.2", python = "~2.7" }   # for py27/pyscss
-
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+closure = "^20191111"
+pyscss = "^1.4.0"
+lesscpy = "^0.15.1"
 
 [build-system]
-requires = ["poetry>=0.12"]
+requires = ["poetry>=1.5.1"]
 build-backend = "poetry.masonry.api"
