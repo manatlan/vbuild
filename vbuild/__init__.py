@@ -9,7 +9,7 @@
 # #############################################################################
 __version__ = "0.0.0" # auto-updated
 
-import re, os, json, glob, itertools, traceback, subprocess, pkgutil
+import re, os, json, glob, itertools, traceback, subprocess, importlib
 
 try:
     from HTMLParser import HTMLParser
@@ -30,9 +30,9 @@ fullPyComp = True  # 3 states ;-)
 # False : minimal py comp, vbuild will include the std lib
 # True  : each component generate its needs (default)
 
-hasLess = bool(pkgutil.find_loader("lesscpy"))
-hasSass = bool(pkgutil.find_loader("scss"))
-hasClosure = bool(pkgutil.find_loader("closure"))
+hasLess = bool(importlib.util.find_spec("lesscpy"))
+hasSass = bool(importlib.util.find_spec("scss"))
+hasClosure = bool(importlib.util.find_spec("closure"))
 
 
 class VBuildException(Exception):
