@@ -27,5 +27,5 @@ pyscss = "^1.4.0"
 lesscpy = "^0.15.1"
 
 [build-system]
-requires = ["poetry>=1.5.1"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
