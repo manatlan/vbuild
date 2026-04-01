@@ -417,8 +417,9 @@ def mkPythonVueComponent(name, template, code, genStdLibMethods=True):
     code = code.replace(
         "class Component:", "class C:"
     )  # minimize class name (todo: use py2js option for that)
-    exec(code, globals(), locals())
-    klass = locals()["C"]
+    exec_locals = {}
+    exec(code, globals(), exec_locals)
+    klass = exec_locals["C"]
 
     computeds = []
     watchs = []
